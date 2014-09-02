@@ -1,0 +1,7 @@
+_vendor/
+bin/
+log/
+tmp/
+db/
+
+logbook.conf

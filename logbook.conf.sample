@@ -1,0 +1,12 @@
+; Logbook config
+
+[server]
+address = 127.0.0.1
+port = 11610
+
+[database]
+path = db/logbook.sqlite3
+
+[log]
+path = log/logbook.log
+logDatabase = true
