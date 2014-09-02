@@ -15,7 +15,7 @@ You will need Go and [Gom](https://github.com/mattn/gom) to build the project. A
 make
 cp logbook.conf.sample logbook.conf
 
-; Launch Logbook
+# Launch Logbook
 bin/logbook
 ```
 
@@ -24,7 +24,7 @@ bin/logbook
 ```bash
 make && make install
 
-; Launch Logbook
+# Launch Logbook
 /opt/logbook/bin/logbook
 ```
 
