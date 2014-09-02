@@ -28,6 +28,14 @@ make && make install
 /opt/logbook/bin/logbook
 ```
 
+#### Configuration
+
+You can specify the path to the config file using `--config` key:
+
+```bash
+/opt/logbook/bin/logbook --config /etc/logbook/logbook.conf
+```
+
 ## Usage
 #### Save log message
 To save log message you need to send POST request to `/{application}/put` with the following params:
