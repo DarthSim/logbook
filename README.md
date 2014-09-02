@@ -34,7 +34,7 @@ To save log message you need to send POST request to `/{application}/put` with t
 
 * __level__ - level of the log message
 * __message__ - log message
-* __tags (optionsl)__ - list of tags. Can be either array or string separated by comma
+* __tags (optional)__ - list of tags. Can be either array or string separated by comma
 
 Example:
 
@@ -59,7 +59,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 * __level__ - minimum level of the log message
 * __start_time__ - search log messages after the given datetime
 * __end_time__ - search log messages before the given datetime
-* __tags (optionsl)__ - array of tags. Can be either array or string separated by comma
+* __tags (optional)__ - array of tags. Can be either array or string separated by comma
 
 Example:
 
