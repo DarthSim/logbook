@@ -14,6 +14,8 @@ var dbmap *gorp.DbMap
 // DB tools ========================================================================================
 
 func initDBSchema() {
+	dbmap.Exec("PRAGMA journal_mode=WAL;")
+
 	dbmap.AddTableWithName(LogRecord{}, "log_records").SetKeys(true, "Id")
 	dbmap.AddTableWithName(Application{}, "applications").SetKeys(true, "Id")
 	dbmap.AddTableWithName(Tag{}, "tags").SetKeys(true, "Id")
