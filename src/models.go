@@ -47,7 +47,7 @@ func findOrCreateApplication(name string) (Application, error) {
 	if err == sql.ErrNoRows {
 		application.Name = name
 
-		err := dbmap.Insert(&application)
+		err := dbSafeInsert(&application)
 		if err != nil {
 			return Application{}, err
 		}
@@ -96,7 +96,7 @@ func createLogRecordTag(logRecord *LogRecord, tag *Tag) (LogRecordTag, error) {
 		TagId:       tag.Id,
 	}
 
-	err := dbmap.Insert(&logRecordTag)
+	err := dbSafeInsert(&logRecordTag)
 	if err != nil {
 		return LogRecordTag{}, err
 	}
@@ -134,7 +134,7 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
 					Name: tagName,
 				}
 
-				err = dbmap.Insert(&newTags[i])
+				err = dbSafeInsert(&newTags[i])
 				if err != nil {
 					return err
 				}
@@ -219,7 +219,7 @@ func createLogRecord(appName string, msg string, lvl int, tagNames []string) (Lo
 	logRecord.ApplicationId = application.Id
 	logRecord.Application = application
 
-	err = dbmap.Insert(&logRecord)
+	err = dbSafeInsert(&logRecord)
 	if err != nil {
 		return LogRecord{}, err
 	}

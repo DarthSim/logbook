@@ -14,7 +14,9 @@ type Config struct {
 		Port    string
 	}
 	Database struct {
-		Path string
+		Path        string
+		LockTimeout int64
+		RetryDelay  int64
 	}
 	Log struct {
 		Path        string

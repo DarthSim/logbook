@@ -6,6 +6,8 @@ port = 11610
 
 [database]
 path = ../db/logbook.sqlite3
+lockTimeout = 1000
+retryDelay = 10
 
 [log]
 path = ../log/logbook.log
