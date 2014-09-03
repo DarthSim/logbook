@@ -25,9 +25,9 @@ type Config struct {
 var config Config
 
 func init() {
-	configfile := flag.String("config", absPathToFile("../logbook.conf"), "path to configuration file")
+	configfile := flag.String("config", "../logbook.conf", "path to configuration file")
 
-	err := gcfg.ReadFileInto(&config, *configfile)
+	err := gcfg.ReadFileInto(&config, absPathToFile(*configfile))
 	if err != nil {
 		fmt.Printf("Error opening config file: %v", err)
 		os.Exit(1)
