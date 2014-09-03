@@ -35,7 +35,7 @@ func initDBSchema() {
 }
 
 func initDB() {
-	connectionString := fmt.Sprintf("file:%v?cache=shared&mode=rwc", config.Database.Path)
+	connectionString := fmt.Sprintf("file:%v?cache=shared&mode=rwc", absPathToFile(config.Database.Path))
 
 	db, err := sql.Open("sqlite3", connectionString)
 	checkErr(err, "sql.Open failed")

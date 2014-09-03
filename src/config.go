@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"code.google.com/p/gcfg"
 )
@@ -26,16 +25,11 @@ type Config struct {
 var config Config
 
 func init() {
-	configfile := flag.String("config", defaultConfigPath(), "path to configuration file")
+	configfile := flag.String("config", absPathToFile("../logbook.conf"), "path to configuration file")
 
 	err := gcfg.ReadFileInto(&config, *configfile)
 	if err != nil {
 		fmt.Printf("Error opening config file: %v", err)
 		os.Exit(1)
 	}
-}
-
-func defaultConfigPath() string {
-	app_path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return filepath.Join(app_path, "../logbook.conf")
 }
