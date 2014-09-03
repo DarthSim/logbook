@@ -9,4 +9,4 @@ path = db/logbook.sqlite3
 
 [log]
 path = log/logbook.log
-logDatabase = true
+logDatabase = false
