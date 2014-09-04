@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -138,7 +139,7 @@ func buildGetLogsResponse(logRecords *[]LogRecord) ([]byte, error) {
 	return json.Marshal(response)
 }
 
-func checkGetLogParams(lvl string, tagNames []string, startTime string, endTime string) error {
+func checkGetLogParams(lvl string, tagNames []string, startTime string, endTime string, page string) error {
 	if len(lvl) != 1 || lvl < "1" || lvl > "5" {
 		return errors.New("Level should be a number between 1 and 5")
 	}
@@ -155,6 +156,10 @@ func checkGetLogParams(lvl string, tagNames []string, startTime string, endTime 
 
 	if !checkTimeFormat(endTime) {
 		return errors.New("End time should be YYYY-MM-DD or YYYY-MM-DD hh-mm-ss")
+	}
+
+	if correct, _ := regexp.MatchString("\\A\\d+\\z", page); !correct {
+		return errors.New("Page should be greater or equal to 1")
 	}
 
 	return nil
@@ -176,18 +181,24 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 	startTimeStr := req.Form.Get("start_time")
 	endTimeStr := req.Form.Get("end_time")
 	tagNames := extractTagNames(req.Form)
+	pageStr := req.Form.Get("page")
 
-	err = checkGetLogParams(levelStr, tagNames, startTimeStr, endTimeStr)
+	if pageStr == "" {
+		pageStr = "1"
+	}
+
+	err = checkGetLogParams(levelStr, tagNames, startTimeStr, endTimeStr, pageStr)
 	if err != nil {
 		serverError(rw, err, 422)
 		return
 	}
 
 	level, _ := strconv.Atoi(levelStr)
+	page, err := strconv.Atoi(pageStr)
 	startTime, _ := parseTime(startTimeStr, false)
 	endTime, _ := parseTime(endTimeStr, true)
 
-	logRecords, err := findLogRecords(appName, level, tagNames, &startTime, &endTime)
+	logRecords, err := findLogRecords(appName, level, tagNames, &startTime, &endTime, page)
 	if err != nil {
 		serverError(rw, err, 500)
 		return

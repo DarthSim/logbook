@@ -68,6 +68,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 * __start_time__ - search log messages after the given datetime
 * __end_time__ - search log messages before the given datetime
 * __tags (optional)__ - array of tags. Can be either array or string separated by comma
+* __page (optional)__ - results page. Logbook returns 100 results per page. Default page number is 1
 
 Example:
 

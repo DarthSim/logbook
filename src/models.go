@@ -236,7 +236,7 @@ func createLogRecord(appName string, msg string, lvl int, tagNames []string) (Lo
 	return logRecord, nil
 }
 
-func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.Time, endTime *time.Time) ([]LogRecord, error) {
+func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.Time, endTime *time.Time, page int) ([]LogRecord, error) {
 	application, err := findOrCreateApplication(appName)
 	if err != nil {
 		return nil, err
@@ -284,12 +284,15 @@ func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.
 	  `+where+`
 	  `+groupBy+`
 	  `+having+`
+	  ORDER BY log_records.id
+	  LIMIT 100 OFFSET :page
   `, map[string]interface{}{
 		"application_id": application.Id,
 		"level":          lvl,
 		"start_time":     startTime,
 		"end_time":       endTime,
 		"tags_count":     tagsCount,
+		"page":           page - 1,
 	})
 
 	if err != nil {
