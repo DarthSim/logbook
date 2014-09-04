@@ -90,6 +90,14 @@ func findTags(names []string) ([]Tag, error) {
 	return tags, err
 }
 
+func findTag(name string) (Tag, error) {
+	var tag Tag
+
+	err := dbmap.SelectOne(&tag, "SELECT * FROM tags WHERE name = ?", name)
+
+	return tag, err
+}
+
 func createLogRecordTag(logRecord *LogRecord, tag *Tag) (LogRecordTag, error) {
 	var logRecordTag = LogRecordTag{
 		LogRecordId: logRecord.Id,
@@ -135,6 +143,10 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
 				}
 
 				err = dbSafeInsert(&newTags[i])
+				if err != nil {
+					// In case somebody inserted this tag before us
+					newTags[i], err = findTag(tagName)
+				}
 				if err != nil {
 					return err
 				}

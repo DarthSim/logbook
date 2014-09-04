@@ -30,9 +30,9 @@ func initDBSchema() {
 	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_level_ind ON log_records (level)")
 	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_created_at_ind ON log_records (created_at)")
 
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS applications_name_ind ON applications (name)")
+	dbmap.Exec("CREATE UNIQUE INDEX IF NOT EXISTS applications_name_ind ON applications (name)")
 
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS tags_name_ind ON tags (name)")
+	dbmap.Exec("CREATE UNIQUE INDEX IF NOT EXISTS tags_name_ind ON tags (name)")
 
 	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_tags_log_record_id_ind ON log_records_tags (log_record_id)")
 	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_tags_tag_id_ind ON log_records_tags (tag_id)")
