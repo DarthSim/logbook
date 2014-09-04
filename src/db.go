@@ -46,6 +46,8 @@ func initDB() {
 
 	dbmap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
+	dbmap.Db.SetMaxIdleConns(config.Database.MaxIdleConnections)
+
 	initDBSchema()
 
 	if config.Log.LogDatabase {
