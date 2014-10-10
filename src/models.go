@@ -260,8 +260,16 @@ func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.
 		having  string
 		where   string
 
-		tagsCount int
+		queryParams map[string]interface{}
 	)
+
+	queryParams = map[string]interface{}{
+		"application_id": application.Id,
+		"level":          lvl,
+		"start_time":     startTime,
+		"end_time":       endTime,
+		"offset":         (page - 1) * 100,
+	}
 
 	if len(tagNames) > 0 {
 		uniqTagNames := uniqStrings(tagNames)
@@ -281,7 +289,7 @@ func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.
 		groupBy = "GROUP BY log_records.id"
 		having = "HAVING COUNT(log_records_tags.log_record_id) = :tags_count"
 
-		tagsCount = len(tagIds)
+		queryParams["tags_count"] = len(tagIds)
 	}
 
 	var logRecords []LogRecord
@@ -297,15 +305,8 @@ func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.
 	  `+groupBy+`
 	  `+having+`
 	  ORDER BY log_records.id
-	  LIMIT 100 OFFSET :page
-  `, map[string]interface{}{
-		"application_id": application.Id,
-		"level":          lvl,
-		"start_time":     startTime,
-		"end_time":       endTime,
-		"tags_count":     tagsCount,
-		"page":           page - 1,
-	})
+	  LIMIT 100 OFFSET :offset
+  `, queryParams)
 
 	if err != nil {
 		return nil, err
