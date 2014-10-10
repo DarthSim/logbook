@@ -1,6 +1,8 @@
 package main
 
 func main() {
+	prepareConfig()
+
 	initLogger()
 	defer closeLogger()
 
