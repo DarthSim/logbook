@@ -27,7 +27,7 @@ type Config struct {
 
 var config Config
 
-func init() {
+func prepareConfig() {
 	configfile := flag.String("config", "../logbook.conf", "path to configuration file")
 
 	err := gcfg.ReadFileInto(&config, absPathToFile(*configfile))

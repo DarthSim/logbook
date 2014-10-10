@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -41,6 +42,10 @@ type LogRecordTag struct {
 
 func findOrCreateApplication(name string) (Application, error) {
 	var application Application
+
+	if len(name) == 0 {
+		return Application{}, errors.New("blank application name")
+	}
 
 	err := dbmap.SelectOne(&application, "SELECT * FROM applications WHERE name = $1", name)
 
