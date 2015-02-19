@@ -206,6 +206,7 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 				for _, tag := range tags {
 					if tag.Id == logRecordTag.TagId {
 						logRecords[i].Tags = append(logRecords[i].Tags, tag)
+						break
 					}
 				}
 			}
