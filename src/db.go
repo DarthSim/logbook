@@ -3,17 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/coopernurse/gorp"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 )
 
-var (
-	dbmap         *gorp.DbMap
-	dbInsertMutex sync.Mutex
-)
+var dbmap *gorp.DbMap
 
 // DB tools ========================================================================================
 
@@ -65,11 +63,31 @@ func dbEscapeString(str string) string {
 	return strings.Replace(str, "'", "''", -1)
 }
 
-func dbSafeInsert(obj interface{}) error {
-	dbInsertMutex.Lock()
-	defer dbInsertMutex.Unlock()
+func dbIsErrLocked(err error) bool {
+	if err != nil && reflect.TypeOf(err).String() == "sqlite3.Error" && err.(sqlite3.Error).Code == sqlite3.ErrLocked {
+		return true
+	}
 
-	return dbmap.Insert(obj)
+	return false
+}
+
+func dbSafeInsert(obj interface{}) error {
+	var err error
+
+	tries := int64(0)
+	maxTries := config.Database.LockTimeout / config.Database.RetryDelay
+	retryDelay := time.Millisecond * time.Duration(config.Database.RetryDelay)
+
+	for {
+		tries++
+		err = dbmap.Insert(obj)
+		if !dbIsErrLocked(err) || tries >= maxTries {
+			break
+		}
+		time.Sleep(retryDelay)
+	}
+
+	return err
 }
 
 // end of DB tools
