@@ -64,11 +64,9 @@ func dbEscapeString(str string) string {
 }
 
 func dbIsErrLocked(err error) bool {
-	if err != nil && reflect.TypeOf(err).String() == "sqlite3.Error" && err.(sqlite3.Error).Code == sqlite3.ErrLocked {
-		return true
-	}
-
-	return false
+	return err != nil &&
+		reflect.TypeOf(err).String() == "sqlite3.Error" &&
+		err.(sqlite3.Error).Code == sqlite3.ErrLocked
 }
 
 func dbSafeInsert(obj interface{}) error {
