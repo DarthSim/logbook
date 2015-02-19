@@ -49,7 +49,7 @@ To save log message you need to send POST request to `/{application}/put` with t
 Example:
 
 ```bash
-curl -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags[]=tag2&tags[]=tag3" 127.0.0.1:11610/testapp/put
+curl --user name:password -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags[]=tag2&tags[]=tag3" 127.0.0.1:11610/testapp/put
 ```
 
 ```json
@@ -75,7 +75,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 Example:
 
 ```bash
-curl "127.0.0.1:11610/testapp/get?level=3&start_time=2014-08-01&end_time=2014-08-31&tags=tag1,tag2"
+curl --user name:password "127.0.0.1:11610/testapp/get?level=3&start_time=2014-08-01&end_time=2014-08-31&tags=tag1,tag2"
 ```
 
 ```json

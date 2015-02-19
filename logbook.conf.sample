@@ -1,5 +1,9 @@
 ; Logbook config
 
+[auth]
+user = user
+password = password
+
 [server]
 address = 127.0.0.1
 port = 11610

@@ -9,6 +9,10 @@ import (
 )
 
 type Config struct {
+	Auth struct {
+		User     string
+		Password string
+	}
 	Server struct {
 		Address string
 		Port    string
