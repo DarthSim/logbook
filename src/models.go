@@ -310,7 +310,7 @@ func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.
 	  `+where+`
 	  `+groupBy+`
 	  `+having+`
-	  ORDER BY log_records.id
+	  ORDER BY log_records.created_at, log_records.id
 	  LIMIT 100 OFFSET :offset
   `, queryParams)
 
