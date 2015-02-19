@@ -21,8 +21,10 @@ type RequestHandler func(http.ResponseWriter, *http.Request)
 func startServer() {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{application}/put", basicAuth(createLogHandler)).Methods("POST")
-	router.HandleFunc("/{application}/get", basicAuth(getLogsHandler)).Methods("GET")
+	router.HandleFunc("/{application}/put", basicAuth(createLogHandler)).
+		Methods("POST")
+	router.HandleFunc("/{application}/get", basicAuth(getLogsHandler)).
+		Methods("GET")
 
 	bindAddress := config.Server.Address + ":" + config.Server.Port
 
@@ -37,14 +39,14 @@ func startServer() {
 func basicAuth(handler RequestHandler) RequestHandler {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		if len(req.Header["Authorization"]) == 0 {
-			serverError(rw, errors.New("Authorization required"), http.StatusUnauthorized)
+			serverError(rw, errors.New("Authorization required"), 401)
 			return
 		}
 
 		auth := strings.SplitN(req.Header["Authorization"][0], " ", 2)
 
 		if len(auth) != 2 || auth[0] != "Basic" {
-			serverError(rw, errors.New("Bad syntax"), http.StatusBadRequest)
+			serverError(rw, errors.New("Bad syntax"), 400)
 			return
 		}
 
@@ -52,7 +54,7 @@ func basicAuth(handler RequestHandler) RequestHandler {
 		pair := strings.SplitN(string(payload), ":", 2)
 
 		if len(pair) != 2 || pair[0] != config.Auth.User || pair[1] != config.Auth.Password {
-			serverError(rw, errors.New("Authorization failed"), http.StatusUnauthorized)
+			serverError(rw, errors.New("Authorization failed"), 401)
 			return
 		}
 

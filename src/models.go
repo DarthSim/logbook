@@ -47,7 +47,11 @@ func findOrCreateApplication(name string) (Application, error) {
 		return Application{}, errors.New("blank application name")
 	}
 
-	err := dbmap.SelectOne(&application, "SELECT * FROM applications WHERE name = $1", name)
+	err := dbmap.SelectOne(
+		&application,
+		"SELECT * FROM applications WHERE name = $1",
+		name,
+	)
 
 	if err == sql.ErrNoRows {
 		application.Name = name
@@ -81,7 +85,10 @@ func findTagIds(names []string) ([]string, error) {
 	var tagIds []string
 
 	joinedNames := tagNamesInOptions(names)
-	_, err := dbmap.Select(&tagIds, "SELECT id FROM tags WHERE name IN ('"+joinedNames+"')")
+	_, err := dbmap.Select(
+		&tagIds,
+		"SELECT id FROM tags WHERE name IN ('"+joinedNames+"')",
+	)
 
 	return tagIds, err
 }
@@ -90,7 +97,10 @@ func findTags(names []string) ([]Tag, error) {
 	var tags []Tag
 
 	joinedNames := tagNamesInOptions(names)
-	_, err := dbmap.Select(&tags, "SELECT * FROM tags WHERE name IN ('"+joinedNames+"')")
+	_, err := dbmap.Select(
+		&tags,
+		"SELECT * FROM tags WHERE name IN ('"+joinedNames+"')",
+	)
 
 	return tags, err
 }
@@ -151,9 +161,9 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
 				if err != nil {
 					// In case somebody inserted this tag before us
 					newTags[i], err = findTag(tagName)
-				}
-				if err != nil {
-					return err
+					if err != nil {
+						return err
+					}
 				}
 
 				i++
@@ -184,7 +194,11 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 		logRecordIds[i] = strconv.FormatInt(logRecord.Id, 10)
 	}
 
-	_, err := dbmap.Select(&logRecordsTags, "SELECT * FROM log_records_tags WHERE log_record_id IN ("+strings.Join(logRecordIds, ",")+")")
+	_, err := dbmap.Select(
+		&logRecordsTags,
+		`SELECT * FROM log_records_tags
+		 WHERE log_record_id IN (`+strings.Join(logRecordIds, ",")+`)`,
+	)
 	if err != nil {
 		return err
 	}
@@ -197,7 +211,13 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 		}
 	}
 
-	_, err = dbmap.Select(&tags, "SELECT * FROM tags WHERE id IN ("+strings.Join(tagIds, ",")+")")
+	_, err = dbmap.Select(
+		&tags,
+		"SELECT * FROM tags WHERE id IN ("+strings.Join(tagIds, ",")+")",
+	)
+	if err != nil {
+		return err
+	}
 
 	for i, logRecord := range logRecords {
 		logRecords[i].Tags = []Tag{}

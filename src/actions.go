@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// Response formats ================================================================================
+// Response formats ============================================================
 
 type LogRecordResponse struct {
 	Id          int64      `json:"id"`
@@ -26,7 +26,7 @@ type LogRecordsResponse []LogRecordResponse
 
 // end of Response formats
 
-// Helpers =========================================================================================
+// Helpers =====================================================================
 func extractTagNames(form url.Values) []string {
 	if len(form["tags[]"]) > 0 {
 		return form["tags[]"]
@@ -39,7 +39,7 @@ func extractTagNames(form url.Values) []string {
 
 // end of Helpers
 
-// Action: Create log ==============================================================================
+// Action: Create log ==========================================================
 
 func buildCreateLogResponse(logRecord *LogRecord) ([]byte, error) {
 	response := LogRecordResponse{
@@ -117,7 +117,7 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 
 // end of Action: Create log
 
-// Action: Get logs ================================================================================
+// Action: Get logs ============================================================
 
 func buildGetLogsResponse(logRecords *[]LogRecord) ([]byte, error) {
 	response := make([]LogRecordResponse, len(*logRecords))

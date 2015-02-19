@@ -32,7 +32,11 @@ type Config struct {
 var config Config
 
 func prepareConfig() {
-	configfile := flag.String("config", "../logbook.conf", "path to configuration file")
+	configfile := flag.String(
+		"config",
+		"../logbook.conf",
+		"path to configuration file",
+	)
 
 	err := gcfg.ReadFileInto(&config, absPathToFile(*configfile))
 	if err != nil {
