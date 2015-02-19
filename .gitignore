@@ -3,5 +3,6 @@ bin/
 log/
 tmp/
 db/
+load_test/*.pyc
 
 logbook.conf
