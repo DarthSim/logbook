@@ -45,11 +45,11 @@ func Test_buildCreateLogResponse(t *testing.T) {
 	parsed := LogRecordResponse{}
 	json.Unmarshal(res, &parsed)
 
-	fmt.Println(res)
+	fmt.Println(string(res[:]))
 	fmt.Println(logRecord.CreatedAt)
 	fmt.Println(parsed.CreatedAt)
 
-	assert.Equal(t, 123, parsed.Id)
+	assert.Equal(t, 1234, parsed.Id)
 	assert.Equal(t, "TestApp", parsed.Application)
 	assert.Equal(t, 5, parsed.Level)
 	assert.EqualValues(t, &now, parsed.CreatedAt)
