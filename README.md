@@ -1,5 +1,5 @@
 # Logbook
-![](https://travis-ci.org/DarthSim/logbook.svg)
+[![Build Status](https://travis-ci.org/DarthSim/logbook.svg?branch=master)](https://travis-ci.org/DarthSim/logbook)
 
 The simplest logs collector for your applications. No GUI, no graphs, no analytics. Just simple HTTP API containing two commands - `put` and `get`.
 
