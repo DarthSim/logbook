@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"testing"
 	"time"
@@ -43,6 +44,10 @@ func Test_buildCreateLogResponse(t *testing.T) {
 
 	parsed := LogRecordResponse{}
 	json.Unmarshal(res, &parsed)
+
+	fmt.Println(res)
+	fmt.Println(logRecord.CreatedAt)
+	fmt.Println(parsed.CreatedAt)
 
 	assert.Equal(t, 123, parsed.Id)
 	assert.Equal(t, "TestApp", parsed.Application)
