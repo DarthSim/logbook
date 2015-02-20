@@ -45,9 +45,8 @@ func Test_buildCreateLogResponse(t *testing.T) {
 	parsed := LogRecordResponse{}
 	json.Unmarshal(res, &parsed)
 
-	fmt.Println(string(res[:]))
-	fmt.Println(logRecord.CreatedAt)
-	fmt.Println(parsed.CreatedAt)
+	fmt.Println(logRecord.CreatedAt.Zone())
+	fmt.Println(parsed.CreatedAt.Zone())
 
 	assert.Equal(t, 123, parsed.Id)
 	assert.Equal(t, "TestApp", parsed.Application)
