@@ -49,10 +49,10 @@ func Test_buildCreateLogResponse(t *testing.T) {
 	fmt.Println(logRecord.CreatedAt)
 	fmt.Println(parsed.CreatedAt)
 
-	assert.Equal(t, 1234, parsed.Id)
+	assert.Equal(t, 123, parsed.Id)
 	assert.Equal(t, "TestApp", parsed.Application)
 	assert.Equal(t, 5, parsed.Level)
-	assert.EqualValues(t, &now, parsed.CreatedAt)
+	assert.EqualValues(t, now, *parsed.CreatedAt)
 	assert.Equal(t, "Lorem ipsum", parsed.Message)
 	assert.Equal(t, []string{"tag1", "tag2"}, parsed.Tags)
 }
@@ -103,7 +103,7 @@ func Test_buildGetLogsResponse(t *testing.T) {
 		assert.Equal(t, logRecords[i].Id, response.Id)
 		assert.Equal(t, logRecords[i].Application.Name, response.Application)
 		assert.Equal(t, logRecords[i].Level, response.Level)
-		assert.EqualValues(t, &now, response.CreatedAt)
+		assert.EqualValues(t, now, *response.CreatedAt)
 		assert.Equal(t, logRecords[i].Message, response.Message)
 		assert.Equal(t, []string{"tag1", "tag2"}, response.Tags)
 	}
