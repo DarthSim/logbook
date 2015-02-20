@@ -9,7 +9,7 @@ __It's better than plain text files.__ You can store your logs in text files but
 __It's easier than big logs collectors.__ You can use big powerful log collectors like Graylog2 or Logstash, but this means you will need MongoDB, ElasticSearch and so on. Looks like overhead, doesn't it?
 
 ## Installation
-You will need Go and [Gom](https://github.com/mattn/gom) to build the project. Also you need SQLite3 installed in your system.
+You will need Go, [Gom](https://github.com/mattn/gom) and SQLite3 to build the project.
 
 #### Build without copying to `/opt`
 
@@ -39,6 +39,9 @@ You can specify the path to the config file using `--config` key:
 ```
 
 ## Usage
+#### Authentication
+Every request to Logbook should contain basic HTTP authentication. You can find and change username and password in the config file.
+
 #### Save log message
 To save log message you need to send POST request to `/{application}/put` with the following params:
 
@@ -49,7 +52,7 @@ To save log message you need to send POST request to `/{application}/put` with t
 Example:
 
 ```bash
-curl --user name:password -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags[]=tag2&tags[]=tag3" 127.0.0.1:11610/testapp/put
+curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags[]=tag2&tags[]=tag3" 127.0.0.1:11610/testapp/put
 ```
 
 ```json
@@ -75,7 +78,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 Example:
 
 ```bash
-curl --user name:password "127.0.0.1:11610/testapp/get?level=3&start_time=2014-08-01&end_time=2014-08-31&tags=tag1,tag2"
+curl --user user:password "127.0.0.1:11610/testapp/get?level=3&start_time=2014-08-01&end_time=2014-08-31&tags=tag1,tag2"
 ```
 
 ```json
