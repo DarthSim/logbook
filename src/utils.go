@@ -41,12 +41,12 @@ func checkTimeFormat(timeStr string) bool {
 }
 
 func parseTime(timeStr string, clockToEnd bool) (time.Time, error) {
-	t, err := time.Parse(timeFormat, timeStr)
+	t, err := time.ParseInLocation(timeFormat, timeStr, time.Local)
 
 	if err != nil {
-		t, err = time.Parse(dateFormat, timeStr)
+		t, err = time.ParseInLocation(dateFormat, timeStr, time.Local)
 		if err == nil && clockToEnd {
-			t = time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 0, time.Local)
+			t = time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 59, 999999999, time.Local)
 		}
 	}
 

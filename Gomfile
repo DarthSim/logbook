@@ -2,3 +2,7 @@ gom 'github.com/gorilla/mux'
 gom 'github.com/coopernurse/gorp'
 gom 'github.com/mattn/go-sqlite3'
 gom 'code.google.com/p/gcfg'
+
+group :test do
+  gom 'github.com/stretchr/testify'
+end
