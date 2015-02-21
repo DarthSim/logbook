@@ -1,11 +1,9 @@
 package main
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -19,6 +17,17 @@ type RequestHandler func(http.ResponseWriter, *http.Request)
 // Server tools ====================================================================================
 
 func startServer() {
+	bindAddress := config.Server.Address + ":" + config.Server.Port
+
+	logger.Printf("Starting server on %s\n", bindAddress)
+
+	err := http.ListenAndServe(bindAddress, setupRouter())
+	if err != nil {
+		logger.Fatalf("Can't start server: %v", err)
+	}
+}
+
+func setupRouter() *mux.Router {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/{application}/put", basicAuth(createLogHandler)).
@@ -26,34 +35,14 @@ func startServer() {
 	router.HandleFunc("/{application}/get", basicAuth(getLogsHandler)).
 		Methods("GET")
 
-	bindAddress := config.Server.Address + ":" + config.Server.Port
-
-	logger.Printf("Starting server on %s\n", bindAddress)
-
-	err := http.ListenAndServe(bindAddress, router)
-	if err != nil {
-		logger.Fatalf("Can't start server: %v", err)
-	}
+	return router
 }
 
 func basicAuth(handler RequestHandler) RequestHandler {
 	return func(rw http.ResponseWriter, req *http.Request) {
-		if len(req.Header["Authorization"]) == 0 {
-			serverError(rw, errors.New("Authorization required"), 401)
-			return
-		}
+		username, password, ok := req.BasicAuth()
 
-		auth := strings.SplitN(req.Header["Authorization"][0], " ", 2)
-
-		if len(auth) != 2 || auth[0] != "Basic" {
-			serverError(rw, errors.New("Bad syntax"), 400)
-			return
-		}
-
-		payload, _ := base64.StdEncoding.DecodeString(auth[1])
-		pair := strings.SplitN(string(payload), ":", 2)
-
-		if len(pair) != 2 || pair[0] != config.Auth.User || pair[1] != config.Auth.Password {
+		if !ok || username != config.Auth.User || password != config.Auth.Password {
 			serverError(rw, errors.New("Authorization failed"), 401)
 			return
 		}
