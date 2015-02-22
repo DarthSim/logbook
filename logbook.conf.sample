@@ -12,6 +12,7 @@ port = 11610
 path = ../db/logbook.sqlite3
 lockTimeout = 1000
 retryDelay = 10
+maxOpenConnections = 5
 maxIdleConnections = 5
 
 [log]

@@ -21,6 +21,7 @@ type Config struct {
 		Path               string
 		LockTimeout        int64
 		RetryDelay         int64
+		MaxOpenConnections int
 		MaxIdleConnections int
 	}
 	Log struct {
@@ -37,6 +38,8 @@ func prepareConfig() {
 		"../logbook.conf",
 		"path to configuration file",
 	)
+
+	flag.Parse()
 
 	err := gcfg.ReadFileInto(&config, absPathToFile(*configfile))
 	if err != nil {
