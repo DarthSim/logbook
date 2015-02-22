@@ -108,6 +108,3 @@ curl --user user:password "127.0.0.1:11610/testapp/get?level=3&start_time=2014-0
 ## Author
 
 Sergey Aleksandrovich
-
-## License
-MIT: http://darthsim.mit-license.org/
