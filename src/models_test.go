@@ -39,15 +39,6 @@ func Test_createLogRecord_good(t *testing.T) {
 	}
 }
 
-func Test_createLogRecord_fail(t *testing.T) {
-	prepareDb()
-	_, err := createLogRecord("", "msg", 5, []string{"foo", "bar"})
-
-	if err == nil {
-		t.Error()
-	}
-}
-
 func prepareDb() {
 	config = Config{}
 	config.Database.Path = "test.sqlite"
