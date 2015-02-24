@@ -11,9 +11,9 @@ const (
 	dateFormat = "2006-01-02"
 )
 
-func appPath() string {
-	path, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return path
+func appPath() (path string) {
+	path, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	return
 }
 
 func absPathToFile(path string) string {
@@ -40,8 +40,8 @@ func checkTimeFormat(timeStr string) bool {
 	return err == nil
 }
 
-func parseTime(timeStr string, clockToEnd bool) (time.Time, error) {
-	t, err := time.ParseInLocation(timeFormat, timeStr, time.Local)
+func parseTime(timeStr string, clockToEnd bool) (t time.Time, err error) {
+	t, err = time.ParseInLocation(timeFormat, timeStr, time.Local)
 
 	if err != nil {
 		t, err = time.ParseInLocation(dateFormat, timeStr, time.Local)
@@ -50,7 +50,7 @@ func parseTime(timeStr string, clockToEnd bool) (time.Time, error) {
 		}
 	}
 
-	return t, err
+	return
 }
 
 func indexOfString(arr []string, el string) int {
@@ -63,12 +63,10 @@ func indexOfString(arr []string, el string) int {
 	return -1
 }
 
-func uniqStrings(arr []string) []string {
+func uniqStrings(arr []string) (newArr []string) {
 	if len(arr) < 2 {
 		return arr
 	}
-
-	newArr := []string{}
 
 	for _, el := range arr {
 		if indexOfString(newArr, el) == -1 {
@@ -76,5 +74,5 @@ func uniqStrings(arr []string) []string {
 		}
 	}
 
-	return newArr
+	return
 }

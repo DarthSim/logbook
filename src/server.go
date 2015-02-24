@@ -21,21 +21,20 @@ func startServer() {
 
 	logger.Printf("Starting server on %s\n", bindAddress)
 
-	err := http.ListenAndServe(bindAddress, setupRouter())
-	if err != nil {
+	if err := http.ListenAndServe(bindAddress, setupRouter()); err != nil {
 		logger.Fatalf("Can't start server: %v", err)
 	}
 }
 
-func setupRouter() *mux.Router {
-	router := mux.NewRouter()
+func setupRouter() (router *mux.Router) {
+	router = mux.NewRouter()
 
 	router.HandleFunc("/{application}/put", basicAuth(createLogHandler)).
 		Methods("POST")
 	router.HandleFunc("/{application}/get", basicAuth(getLogsHandler)).
 		Methods("GET")
 
-	return router
+	return
 }
 
 func basicAuth(handler RequestHandler) RequestHandler {
@@ -56,15 +55,19 @@ func requestVars(req *http.Request) map[string]string {
 }
 
 func serverError(rw http.ResponseWriter, err error, status int) {
-	logger.Printf("Server error: %v", err)
+	var msg string
 
-	response, _ := json.Marshal(ErrorResponse{
-		Error: err.Error(),
-	})
+	if status > 500 {
+		logger.Printf("Server error: %v", err)
+		msg = "Internal server error"
+	} else {
+		msg = err.Error()
+	}
 
-	rw.Header().Set("Content-Type", "application/json; charset=utf-8")
+	response, _ := json.Marshal(ErrorResponse{msg})
+
 	rw.WriteHeader(status)
-	rw.Write(response)
+	serverResponse(rw, response)
 }
 
 func serverResponse(rw http.ResponseWriter, response []byte) {

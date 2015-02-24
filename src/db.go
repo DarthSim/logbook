@@ -26,16 +26,18 @@ func initDBSchema() {
 	err := dbmap.CreateTablesIfNotExists()
 	checkErr(err, "Unable to create DB schema")
 
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_application_id_ind ON log_records (application_id)")
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_level_ind ON log_records (level)")
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_created_at_ind ON log_records (created_at)")
+	dbmap.Exec(`
+		CREATE INDEX IF NOT EXISTS log_records_application_id_ind ON log_records (application_id)")
+		CREATE INDEX IF NOT EXISTS log_records_level_ind ON log_records (level)
+		CREATE INDEX IF NOT EXISTS log_records_created_at_ind ON log_records (created_at)
 
-	dbmap.Exec("CREATE UNIQUE INDEX IF NOT EXISTS applications_name_ind ON applications (name)")
+		CREATE UNIQUE INDEX IF NOT EXISTS applications_name_ind ON applications (name)
 
-	dbmap.Exec("CREATE UNIQUE INDEX IF NOT EXISTS tags_name_ind ON tags (name)")
+		CREATE UNIQUE INDEX IF NOT EXISTS tags_name_ind ON tags (name)
 
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_tags_log_record_id_ind ON log_records_tags (log_record_id)")
-	dbmap.Exec("CREATE INDEX IF NOT EXISTS log_records_tags_tag_id_ind ON log_records_tags (tag_id)")
+		CREATE INDEX IF NOT EXISTS log_records_tags_log_record_id_ind ON log_records_tags (log_record_id)
+		CREATE INDEX IF NOT EXISTS log_records_tags_tag_id_ind ON log_records_tags (tag_id)
+	`)
 }
 
 func initDB() {
@@ -73,9 +75,7 @@ func dbIsErrLocked(err error) bool {
 		err.(sqlite3.Error).Code == sqlite3.ErrLocked
 }
 
-func dbSafeInsert(obj interface{}) error {
-	var err error
-
+func dbSafeInsert(obj interface{}) (err error) {
 	tries := int64(0)
 	maxTries := config.Database.LockTimeout / config.Database.RetryDelay
 	retryDelay := time.Millisecond * time.Duration(config.Database.RetryDelay)
@@ -89,7 +89,7 @@ func dbSafeInsert(obj interface{}) error {
 		time.Sleep(retryDelay)
 	}
 
-	return err
+	return
 }
 
 // end of DB tools

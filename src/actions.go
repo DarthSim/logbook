@@ -81,8 +81,7 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 
 	vars := requestVars(req)
 
-	err = safeParseForm(req)
-	if err != nil {
+	if err = safeParseForm(req); err != nil {
 		serverError(rw, err, 500)
 		return
 	}
@@ -92,8 +91,7 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 	levelStr := req.Form.Get("level")
 	tagNames := extractTagNames(req.Form)
 
-	err = checkCreateLogParams(message, levelStr, tagNames)
-	if err != nil {
+	if err = checkCreateLogParams(message, levelStr, tagNames); err != nil {
 		serverError(rw, err, 422)
 		return
 	}
@@ -170,8 +168,7 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 
 	vars := requestVars(req)
 
-	err = safeParseForm(req)
-	if err != nil {
+	if err = safeParseForm(req); err != nil {
 		serverError(rw, err, 500)
 		return
 	}
@@ -205,6 +202,10 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	response, err := buildGetLogsResponse(&logRecords)
+	if err != nil {
+		serverError(rw, err, 500)
+		return
+	}
 
 	serverResponse(rw, response)
 }

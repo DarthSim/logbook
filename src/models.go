@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -40,31 +39,23 @@ type LogRecordTag struct {
 
 // Application =====================================================================================
 
-func findOrCreateApplication(name string) (Application, error) {
-	var application Application
-
-	if len(name) == 0 {
-		return Application{}, errors.New("blank application name")
-	}
-
-	err := dbmap.SelectOne(
-		&application,
+func findOrCreateApplication(name string) (app Application, err error) {
+	err = dbmap.SelectOne(
+		&app,
 		"SELECT * FROM applications WHERE name = $1",
 		name,
 	)
 
 	if err == sql.ErrNoRows {
-		application.Name = name
-
-		err := dbSafeInsert(&application)
-		if err != nil {
-			return Application{}, err
-		}
-	} else if err != nil {
-		return Application{}, err
+		app.Name = name
+		err = dbSafeInsert(&app)
 	}
 
-	return application, nil
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 // end of Application
@@ -81,56 +72,39 @@ func tagNamesInOptions(names []string) string {
 	return strings.Join(escapedNames, "','")
 }
 
-func findTagIds(names []string) ([]string, error) {
-	var tagIds []string
-
-	joinedNames := tagNamesInOptions(names)
-	_, err := dbmap.Select(
+func findTagIds(names []string) (tagIds []string, err error) {
+	_, err = dbmap.Select(
 		&tagIds,
-		"SELECT id FROM tags WHERE name IN ('"+joinedNames+"')",
+		"SELECT id FROM tags WHERE name IN ('"+tagNamesInOptions(names)+"')",
 	)
 
-	return tagIds, err
+	return
 }
 
-func findTags(names []string) ([]Tag, error) {
-	var tags []Tag
-
-	joinedNames := tagNamesInOptions(names)
-	_, err := dbmap.Select(
+func findTags(names []string) (tags []Tag, err error) {
+	_, err = dbmap.Select(
 		&tags,
-		"SELECT * FROM tags WHERE name IN ('"+joinedNames+"')",
+		"SELECT * FROM tags WHERE name IN ('"+tagNamesInOptions(names)+"')",
 	)
 
-	return tags, err
+	return
 }
 
-func findTag(name string) (Tag, error) {
-	var tag Tag
-
-	err := dbmap.SelectOne(&tag, "SELECT * FROM tags WHERE name = ?", name)
-
-	return tag, err
+func findTag(name string) (tag Tag, err error) {
+	err = dbmap.SelectOne(&tag, "SELECT * FROM tags WHERE name = ?", name)
+	return
 }
 
-func createLogRecordTag(logRecord *LogRecord, tag *Tag) (LogRecordTag, error) {
-	var logRecordTag = LogRecordTag{
-		LogRecordId: logRecord.Id,
-		TagId:       tag.Id,
-	}
-
-	err := dbSafeInsert(&logRecordTag)
-	if err != nil {
-		return LogRecordTag{}, err
-	}
-
-	return logRecordTag, nil
+func createLogRecordTag(logRecord *LogRecord, tag *Tag) (logRecordTag LogRecordTag, err error) {
+	logRecordTag = LogRecordTag{logRecord.Id, tag.Id}
+	err = dbSafeInsert(&logRecordTag)
+	return
 }
 
-func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
+func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) (err error) {
 	existingTags, err := findTags(tagNames)
 	if err != nil {
-		return err
+		return
 	}
 
 	newTagsCount := len(tagNames) - len(existingTags)
@@ -153,16 +127,12 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
 			}
 
 			if !exists {
-				newTags[i] = Tag{
-					Name: tagName,
-				}
+				newTags[i] = Tag{Name: tagName}
 
-				err = dbSafeInsert(&newTags[i])
-				if err != nil {
+				if err = dbSafeInsert(&newTags[i]); err != nil {
 					// In case somebody inserted this tag before us
-					newTags[i], err = findTag(tagName)
-					if err != nil {
-						return err
+					if newTags[i], err = findTag(tagName); err != nil {
+						return
 					}
 				}
 
@@ -174,18 +144,17 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) error {
 	}
 
 	for _, tag := range existingTags {
-		_, err := createLogRecordTag(logRecord, &tag)
-		if err != nil {
-			return err
+		if _, err = createLogRecordTag(logRecord, &tag); err != nil {
+			return
 		}
 	}
 
 	logRecord.Tags = existingTags
 
-	return nil
+	return
 }
 
-func loadTagsOfLogRecords(logRecords []LogRecord) error {
+func loadTagsOfLogRecords(logRecords []LogRecord) (err error) {
 	var tags []Tag
 	var logRecordsTags []LogRecordTag
 
@@ -194,13 +163,13 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 		logRecordIds[i] = strconv.FormatInt(logRecord.Id, 10)
 	}
 
-	_, err := dbmap.Select(
+	_, err = dbmap.Select(
 		&logRecordsTags,
 		`SELECT * FROM log_records_tags
 		 WHERE log_record_id IN (`+strings.Join(logRecordIds, ",")+`)`,
 	)
 	if err != nil {
-		return err
+		return
 	}
 
 	tagIds := []string{}
@@ -216,7 +185,7 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 		"SELECT * FROM tags WHERE id IN ("+strings.Join(tagIds, ",")+")",
 	)
 	if err != nil {
-		return err
+		return
 	}
 
 	for i, logRecord := range logRecords {
@@ -233,17 +202,17 @@ func loadTagsOfLogRecords(logRecords []LogRecord) error {
 		}
 	}
 
-	return nil
+	return
 }
 
 // end of Tag
 
 // LogRecord =======================================================================================
 
-func createLogRecord(appName string, msg string, lvl int, tagNames []string) (LogRecord, error) {
+func createLogRecord(appName string, msg string, lvl int, tagNames []string) (logRecord LogRecord, err error) {
 	now := time.Now()
 
-	logRecord := LogRecord{
+	logRecord = LogRecord{
 		Level:     lvl,
 		CreatedAt: &now,
 		Message:   msg,
@@ -251,27 +220,24 @@ func createLogRecord(appName string, msg string, lvl int, tagNames []string) (Lo
 
 	application, err := findOrCreateApplication(appName)
 	if err != nil {
-		return LogRecord{}, err
+		return
 	}
 
 	logRecord.ApplicationId = application.Id
 	logRecord.Application = application
 
-	err = dbSafeInsert(&logRecord)
-	if err != nil {
-		return LogRecord{}, err
+	if err = dbSafeInsert(&logRecord); err != nil {
+		return
 	}
 
 	if len(tagNames) > 0 {
 		uniqTagNames := uniqStrings(tagNames)
-
-		err := addTagsToLogRecord(&logRecord, uniqTagNames)
-		if err != nil {
-			return LogRecord{}, err
+		if err = addTagsToLogRecord(&logRecord, uniqTagNames); err != nil {
+			return
 		}
 	}
 
-	return logRecord, nil
+	return
 }
 
 func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.Time, endTime *time.Time, page int) ([]LogRecord, error) {
