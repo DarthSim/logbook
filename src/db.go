@@ -26,18 +26,19 @@ func initDBSchema() {
 	err := dbmap.CreateTablesIfNotExists()
 	checkErr(err, "Unable to create DB schema")
 
-	dbmap.Exec(`
-		CREATE INDEX IF NOT EXISTS log_records_application_id_ind ON log_records (application_id)")
-		CREATE INDEX IF NOT EXISTS log_records_level_ind ON log_records (level)
-		CREATE INDEX IF NOT EXISTS log_records_created_at_ind ON log_records (created_at)
+	_, err = dbmap.Exec(`
+		CREATE INDEX IF NOT EXISTS log_records_application_id_ind ON log_records (application_id);
+		CREATE INDEX IF NOT EXISTS log_records_level_ind ON log_records (level);
+		CREATE INDEX IF NOT EXISTS log_records_created_at_ind ON log_records (created_at);
 
-		CREATE UNIQUE INDEX IF NOT EXISTS applications_name_ind ON applications (name)
+		CREATE UNIQUE INDEX IF NOT EXISTS applications_name_ind ON applications (name);
 
-		CREATE UNIQUE INDEX IF NOT EXISTS tags_name_ind ON tags (name)
+		CREATE UNIQUE INDEX IF NOT EXISTS tags_name_ind ON tags (name);
 
-		CREATE INDEX IF NOT EXISTS log_records_tags_log_record_id_ind ON log_records_tags (log_record_id)
-		CREATE INDEX IF NOT EXISTS log_records_tags_tag_id_ind ON log_records_tags (tag_id)
+		CREATE INDEX IF NOT EXISTS log_records_tags_log_record_id_ind ON log_records_tags (log_record_id);
+		CREATE INDEX IF NOT EXISTS log_records_tags_tag_id_ind ON log_records_tags (tag_id);
 	`)
+	checkErr(err, "Unable to create DB schema")
 }
 
 func initDB() {

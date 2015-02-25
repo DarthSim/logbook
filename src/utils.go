@@ -26,7 +26,7 @@ func absPathToFile(path string) string {
 
 func checkErr(err error, msg string) {
 	if err != nil {
-		logger.Fatalln(msg, err)
+		logger.Fatalf("%s (%v)", msg, err)
 	}
 }
 
