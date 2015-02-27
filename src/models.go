@@ -10,11 +10,11 @@ import (
 // Models ==========================================================================================
 
 type LogRecord struct {
-	Id            int64      `db:"id"`
-	ApplicationId int64      `db:"application_id"`
-	Level         int        `db:"level"`
-	CreatedAt     *time.Time `db:"created_at"`
-	Message       string     `db:"message"`
+	Id            int64     `db:"id"`
+	ApplicationId int64     `db:"application_id"`
+	Level         int       `db:"level"`
+	CreatedAt     time.Time `db:"created_at"`
+	Message       string    `db:"message"`
 
 	Application Application `db:"-"`
 	Tags        []Tag       `db:"-"`
@@ -127,7 +127,7 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) (err error) {
 			}
 
 			if !exists {
-				newTags[i] = Tag{Name: tagName}
+				newTags[i].Name = tagName
 
 				if err = dbSafeInsert(&newTags[i]); err != nil {
 					// In case somebody inserted this tag before us
@@ -210,11 +210,9 @@ func loadTagsOfLogRecords(logRecords []LogRecord) (err error) {
 // LogRecord =======================================================================================
 
 func createLogRecord(appName string, msg string, lvl int, tagNames []string) (logRecord LogRecord, err error) {
-	now := time.Now()
-
 	logRecord = LogRecord{
 		Level:     lvl,
-		CreatedAt: &now,
+		CreatedAt: time.Now(),
 		Message:   msg,
 	}
 
@@ -240,7 +238,7 @@ func createLogRecord(appName string, msg string, lvl int, tagNames []string) (lo
 	return
 }
 
-func findLogRecords(appName string, lvl int, tagNames []string, startTime *time.Time, endTime *time.Time, page int) ([]LogRecord, error) {
+func findLogRecords(appName string, lvl int, tagNames []string, startTime time.Time, endTime time.Time, page int) ([]LogRecord, error) {
 	application, err := findOrCreateApplication(appName)
 	if err != nil {
 		return nil, err

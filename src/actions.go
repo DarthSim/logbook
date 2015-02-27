@@ -14,12 +14,12 @@ import (
 // Response formats ============================================================
 
 type LogRecordResponse struct {
-	Id          int64      `json:"id"`
-	Application string     `json:"application"`
-	Level       int        `json:"level"`
-	CreatedAt   *time.Time `json:"created_at"`
-	Message     string     `json:"message"`
-	Tags        []string   `json:"tags"`
+	Id          int64     `json:"id"`
+	Application string    `json:"application"`
+	Level       int       `json:"level"`
+	CreatedAt   time.Time `json:"created_at"`
+	Message     string    `json:"message"`
+	Tags        []string  `json:"tags"`
 }
 
 type LogRecordsResponse []LogRecordResponse
@@ -195,7 +195,7 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 	startTime, _ := parseTime(startTimeStr, false)
 	endTime, _ := parseTime(endTimeStr, true)
 
-	logRecords, err := findLogRecords(appName, level, tagNames, &startTime, &endTime, page)
+	logRecords, err := findLogRecords(appName, level, tagNames, startTime, endTime, page)
 	if err != nil {
 		serverError(rw, err, 500)
 		return

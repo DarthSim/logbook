@@ -142,7 +142,7 @@ func (suite *ActionsTestSuite) Test_createLogHandler_Success() {
 	suite.Equal("apptest", parsedRes.Application)
 	suite.Equal("Lorem ipsum", parsedRes.Message)
 	suite.Equal(5, parsedRes.Level)
-	suite.IsType(time.Now(), *parsedRes.CreatedAt)
+	suite.IsType(time.Now(), parsedRes.CreatedAt)
 	suite.Equal([]string{"tag1", "tag2"}, parsedRes.Tags)
 }
 
@@ -191,21 +191,21 @@ func (suite *ActionsTestSuite) Test_getLogsHandler_Success() {
 	if len(parsedRes) == 2 {
 		suite.IsType(int64(1), parsedRes[0].Id)
 		suite.Equal("testapp1", parsedRes[0].Application)
-		suite.Equal("Message two", parsedRes[0].Message)
-		suite.Equal(2, parsedRes[0].Level)
-		suite.IsType(time.Now(), *parsedRes[0].CreatedAt)
-		suite.Contains(parsedRes[0].Tags, "tag2")
+		suite.Equal("Message three", parsedRes[0].Message)
+		suite.Equal(3, parsedRes[0].Level)
+		suite.IsType(time.Now(), parsedRes[0].CreatedAt)
 		suite.Contains(parsedRes[0].Tags, "tag3")
 		suite.Contains(parsedRes[0].Tags, "tag4")
+		suite.Contains(parsedRes[0].Tags, "tag5")
 
 		suite.IsType(int64(1), parsedRes[1].Id)
 		suite.Equal("testapp1", parsedRes[1].Application)
-		suite.Equal("Message three", parsedRes[1].Message)
-		suite.Equal(3, parsedRes[1].Level)
-		suite.IsType(time.Now(), *parsedRes[1].CreatedAt)
+		suite.Equal("Message two", parsedRes[1].Message)
+		suite.Equal(2, parsedRes[1].Level)
+		suite.IsType(time.Now(), parsedRes[1].CreatedAt)
+		suite.Contains(parsedRes[1].Tags, "tag2")
 		suite.Contains(parsedRes[1].Tags, "tag3")
 		suite.Contains(parsedRes[1].Tags, "tag4")
-		suite.Contains(parsedRes[1].Tags, "tag5")
 	}
 }
 
