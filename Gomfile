@@ -1,5 +1,5 @@
 gom 'github.com/gorilla/mux'
-gom 'github.com/coopernurse/gorp'
+gom 'github.com/go-gorp/gorp'
 gom 'github.com/mattn/go-sqlite3'
 gom 'code.google.com/p/gcfg'
 
