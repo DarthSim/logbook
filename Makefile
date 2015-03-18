@@ -11,3 +11,6 @@ install:
 	cp -r bin /opt/logbook
 	cp -r logbook.conf.sample /opt/logbook
 	cp -r logbook.conf.sample /opt/logbook/logbook.conf
+
+test:
+	gom exec ginkgo src/

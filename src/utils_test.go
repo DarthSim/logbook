@@ -1,59 +1,101 @@
 package main
 
 import (
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func Test_absPathToFile(t *testing.T) {
-	assert.Equal(t, "/lorem/ipsum/dolor",
-		absPathToFile("/lorem/ipsum/dolor"))
+var _ = Describe("Utils", func() {
+	Describe("absPathToFile", func() {
+		It("should return provided absolute path as is", func() {
+			Expect(absPathToFile("/lorem/ipsum/dolor")).To(
+				Equal("/lorem/ipsum/dolor"),
+			)
+		})
 
-	assert.Equal(t, appPath()+"/lorem/ipsum/dolor",
-		absPathToFile("./lorem/ipsum/dolor"))
-}
+		It("should expand provided relative path", func() {
+			Expect(absPathToFile("./lorem/ipsum/dolor")).To(
+				Equal(appPath() + "/lorem/ipsum/dolor"),
+			)
+		})
+	})
 
-func Test_checkTimeFormat(t *testing.T) {
-	assert.True(t, checkTimeFormat("2014-08-08"),
-		"2014-08-08 should be responded as valid date")
+	Describe("checkTimeFormat", func() {
+		It("should return true for valid date format", func() {
+			Expect(checkTimeFormat("2014-08-08")).To(BeTrue())
+		})
 
-	assert.True(t, checkTimeFormat("2014-08-08 01:02:03"),
-		"2014-08-08 01:02:03 should be responded as valid datetime")
+		It("should return true for valid datetime format", func() {
+			Expect(checkTimeFormat("2014-08-08 01:02:03")).To(BeTrue())
+		})
 
-	assert.False(t, checkTimeFormat("2014-08-08-90"),
-		"2014-08-08-90 should be responded as valid date")
+		It("should return false for invalid date format", func() {
+			Expect(checkTimeFormat("2014-08-088")).To(BeFalse())
+		})
 
-	assert.False(t, checkTimeFormat("2014-08-08 01:02:03:04"),
-		"2014-08-08 01:02:03:04 should be responded as valid datetime")
-}
+		It("should return false for invalid datetime format", func() {
+			Expect(checkTimeFormat("2014-08-08 01:02:033")).To(BeFalse())
+		})
+	})
 
-func Test_parseTime(t *testing.T) {
-	result, _ := parseTime("2014-09-08", false)
-	assert.EqualValues(t, time.Date(2014, 9, 8, 0, 0, 0, 0, time.Local),
-		result)
+	Describe("parseTime", func() {
+		It("should parse time", func() {
+			result, err := parseTime("2014-09-08 11:12:13", false)
+			Expect(result).To(Equal(time.Date(2014, 9, 8, 11, 12, 13, 0, time.Local)))
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-	result, _ = parseTime("2014-09-08", true)
-	assert.EqualValues(t, time.Date(2014, 9, 8, 23, 59, 59, 999999999, time.Local),
-		result)
+		It("should parse date and set time to the beginning of day", func() {
+			result, err := parseTime("2014-09-08", false)
+			Expect(result).To(Equal(time.Date(2014, 9, 8, 0, 0, 0, 0, time.Local)))
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-	result, _ = parseTime("2014-09-08 11:12:13", false)
-	assert.EqualValues(t, time.Date(2014, 9, 8, 11, 12, 13, 0, time.Local),
-		result)
-}
+		Context("when clockToEnd is true", func() {
+			It("should parse date and set time to the end of day", func() {
+				result, err := parseTime("2014-09-08", true)
+				Expect(result).To(Equal(time.Date(2014, 9, 8, 23, 59, 59, 999999999, time.Local)))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 
-func Test_indexOfString(t *testing.T) {
-	input := []string{"aaa", "bbb", "ccc"}
+		Context("when provided string has invalid format", func() {
+			It("should return error", func() {
+				_, err := parseTime("2014-09-088", false)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
 
-	assert.Equal(t, 1, indexOfString(input, "bbb"))
-	assert.Equal(t, -1, indexOfString(input, "ddd"))
-}
+	Describe("indexOfString", func() {
+		var array []string
 
-func Test_uniqStrings(t *testing.T) {
-	input := []string{"fff", "fff2"}
-	assert.Equal(t, input, uniqStrings(input))
+		BeforeEach(func() {
+			array = []string{"aaa", "bbb", "ccc"}
+		})
 
-	input = []string{"fff", "fff"}
-	assert.Equal(t, []string{"fff"}, uniqStrings(input))
-}
+		It("should return index of string in array", func() {
+			Expect(indexOfString(array, "bbb")).To(Equal(1))
+		})
+
+		Context("when array doesn't include string", func() {
+			It("should return -1", func() {
+				Expect(indexOfString(array, "ddd")).To(Equal(-1))
+			})
+		})
+	})
+
+	Describe("uniqStrings", func() {
+		It("should remove dublicated items from array", func() {
+			input := []string{"fff", "fff"}
+			Expect(uniqStrings(input)).To(Equal([]string{"fff"}))
+		})
+
+		It("should return provided unique array as is", func() {
+			input := []string{"fff", "fff2"}
+			Expect(uniqStrings(input)).To(Equal(input))
+		})
+	})
+})

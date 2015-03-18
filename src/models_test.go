@@ -2,245 +2,247 @@ package main
 
 import (
 	"os"
-	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-type ModelsTestSuite struct {
-	suite.Suite
-}
+var _ = Describe("Models", func() {
+	BeforeEach(func() {
+		initDB()
+	})
 
-func (suite *ModelsTestSuite) Date(year int, month time.Month, day int) time.Time {
-	return time.Date(year, month, day, 0, 0, 0, 0, time.Local)
-}
+	AfterEach(func() {
+		closeDB()
+		os.Remove(absPathToFile(config.Database.Path))
+	})
 
-func (suite *ModelsTestSuite) SetupSuite() {
-	config = Config{}
+	Describe("createLogRecord", func() {
+		var logRecord LogRecord
 
-	config.Database.Path = "test.sqlite"
-	config.Database.LockTimeout = 1
-	config.Database.RetryDelay = 10
-	config.Database.MaxOpenConnections = 5
-	config.Database.MaxIdleConnections = 5
+		JustBeforeEach(func() {
+			var err error
 
-	config.Log.Path = "test.log"
-	config.Log.LogDatabase = false
+			logRecord, err = createLogRecord(
+				"apptest",
+				"Message one",
+				5,
+				[]string{"tag1", "tag2"},
+			)
 
-	config.Auth.User = "test"
-	config.Auth.Password = "test"
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-	initLogger()
-}
+		It("should create log record with application and tags", func() {
+			var (
+				applications   []Application
+				logRecords     []LogRecord
+				tags           []Tag
+				logRecordsTags []LogRecordTag
+			)
 
-func (suite *ModelsTestSuite) TearDownSuite() {
-	closeLogger()
-	os.Remove(absPathToFile(config.Log.Path))
-}
+			dbmap.Select(&applications, "SELECT * FROM applications")
+			dbmap.Select(&logRecords, "SELECT * FROM log_records")
+			dbmap.Select(&logRecordsTags, "SELECT * FROM log_records_tags")
+			dbmap.Select(&tags, "SELECT * FROM tags")
 
-func (suite *ModelsTestSuite) SetupTest() {
-	initDB()
-}
+			Expect(applications).To(HaveLen(1))
+			Expect(applications[0].Name).To(Equal("apptest"))
 
-func (suite *ModelsTestSuite) TearDownTest() {
-	closeDB()
-	os.Remove(absPathToFile(config.Database.Path))
-}
+			Expect(logRecords).To(HaveLen(1))
+			Expect(logRecords[0].ApplicationId).To(Equal(applications[0].Id))
+			Expect(logRecords[0].Message).To(Equal("Message one"))
+			Expect(logRecords[0].Level).To(Equal(5))
 
-func (suite *ModelsTestSuite) Test_createLogRecord() {
-	logRecord, err := createLogRecord(
-		"apptest",
-		"Message one",
-		5,
-		[]string{"tag1", "tag2"},
-	)
+			Expect(tags).To(HaveLen(2))
+			Expect(tags[0].Name).To(Equal("tag1"))
+			Expect(tags[1].Name).To(Equal("tag2"))
 
-	suite.Nil(err)
+			Expect(logRecordsTags).To(HaveLen(2))
+			Expect(logRecordsTags[0].LogRecordId).To(Equal(logRecords[0].Id))
+			Expect(logRecordsTags[0].TagId).To(Equal(tags[0].Id))
+			Expect(logRecordsTags[1].LogRecordId).To(Equal(logRecords[0].Id))
+			Expect(logRecordsTags[1].TagId).To(Equal(tags[1].Id))
+		})
 
-	suite.Equal("Message one", logRecord.Message)
-	suite.Equal(5, logRecord.Level)
-	suite.Equal("apptest", logRecord.Application.Name)
-	suite.Equal("tag1", logRecord.Tags[0].Name)
-	suite.Equal("tag2", logRecord.Tags[1].Name)
+		It("should return created log record", func() {
+			Expect(logRecord.Message).To(Equal("Message one"))
+			Expect(logRecord.Level).To(Equal(5))
+			Expect(logRecord.Application.Name).To(Equal("apptest"))
+			Expect(logRecord.Tags[0].Name).To(Equal("tag1"))
+			Expect(logRecord.Tags[1].Name).To(Equal("tag2"))
+		})
 
-	var (
-		applications   []Application
-		logRecords     []LogRecord
-		tags           []Tag
-		logRecordsTags []LogRecordTag
-	)
+		Context("when used many times", func() {
+			It("should reuse application and tags", func() {
+				createLogRecord("apptest", "Message two", 3, []string{"tag2", "tag3"})
 
-	dbmap.Select(&applications, "SELECT * FROM applications")
-	dbmap.Select(&logRecords, "SELECT * FROM log_records")
-	dbmap.Select(&logRecordsTags, "SELECT * FROM log_records_tags")
-	dbmap.Select(&tags, "SELECT * FROM tags")
+				var (
+					applications   []Application
+					logRecords     []LogRecord
+					tags           []Tag
+					logRecordsTags []LogRecordTag
+				)
 
-	suite.Len(applications, 1)
-	suite.Equal("apptest", applications[0].Name)
+				dbmap.Select(&applications, "SELECT * FROM applications")
+				dbmap.Select(&logRecords, "SELECT * FROM log_records")
+				dbmap.Select(&logRecordsTags, "SELECT * FROM log_records_tags")
+				dbmap.Select(&tags, "SELECT * FROM tags")
 
-	suite.Len(logRecords, 1)
-	suite.Equal(applications[0].Id, logRecords[0].ApplicationId)
-	suite.Equal("Message one", logRecords[0].Message)
-	suite.Equal(5, logRecords[0].Level)
+				Expect(applications).To(HaveLen(1))
+				Expect(applications[0].Name).To(Equal("apptest"))
 
-	suite.Len(tags, 2)
-	suite.Equal("tag1", tags[0].Name)
-	suite.Equal("tag2", tags[1].Name)
+				Expect(logRecords).To(HaveLen(2))
+				Expect(logRecords[1].ApplicationId).To(Equal(applications[0].Id))
+				Expect(logRecords[1].Message).To(Equal("Message two"))
+				Expect(logRecords[1].Level).To(Equal(3))
 
-	suite.Len(logRecordsTags, 2)
-	suite.Equal(logRecords[0].Id, logRecordsTags[0].LogRecordId)
-	suite.Equal(tags[0].Id, logRecordsTags[0].TagId)
-	suite.Equal(logRecords[0].Id, logRecordsTags[1].LogRecordId)
-	suite.Equal(tags[1].Id, logRecordsTags[1].TagId)
-}
+				Expect(tags).To(HaveLen(3))
+				Expect(tags[1].Name).To(Equal("tag2"))
+				Expect(tags[2].Name).To(Equal("tag3"))
 
-func (suite *ModelsTestSuite) Test_createLogRecord_Twice() {
-	createLogRecord("apptest", "Message one", 5, []string{"tag1", "tag2"})
-	createLogRecord("apptest", "Message two", 3, []string{"tag2", "tag3"})
+				Expect(logRecordsTags).To(HaveLen(4))
+				Expect(logRecordsTags[2].LogRecordId).To(Equal(logRecords[1].Id))
+				Expect(logRecordsTags[2].TagId).To(Equal(tags[1].Id))
+				Expect(logRecordsTags[3].LogRecordId).To(Equal(logRecords[1].Id))
+				Expect(logRecordsTags[3].TagId).To(Equal(tags[2].Id))
+			})
+		})
+	})
 
-	var (
-		applications   []Application
-		logRecords     []LogRecord
-		tags           []Tag
-		logRecordsTags []LogRecordTag
-	)
+	Describe("findLogRecords", func() {
+		buildDate := func(year int, month time.Month, day int) time.Time {
+			return time.Date(year, month, day, 0, 0, 0, 0, time.Local)
+		}
 
-	dbmap.Select(&applications, "SELECT * FROM applications")
-	dbmap.Select(&logRecords, "SELECT * FROM log_records")
-	dbmap.Select(&logRecordsTags, "SELECT * FROM log_records_tags")
-	dbmap.Select(&tags, "SELECT * FROM tags")
+		It("should return return log records filtered by app level and time", func() {
+			applications := []Application{
+				Application{0, "testapp1"},
+				Application{0, "testapp2"},
+			}
+			Expect(
+				dbmap.Insert(&applications[0], &applications[1]),
+			).To(Succeed())
 
-	suite.Len(applications, 1, "Applications should be reusable")
-	suite.Equal("apptest", applications[0].Name)
+			logRecords := []LogRecord{
+				LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: buildDate(2014, 01, 01), Message: "Message 1"},
+				LogRecord{ApplicationId: applications[1].Id, Level: 5, CreatedAt: buildDate(2014, 02, 01), Message: "Message 2"},
+				LogRecord{ApplicationId: applications[0].Id, Level: 1, CreatedAt: buildDate(2014, 03, 01), Message: "Message 3"},
+				LogRecord{ApplicationId: applications[0].Id, Level: 2, CreatedAt: buildDate(2014, 04, 01), Message: "Message 4"},
+				LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: buildDate(2014, 05, 01), Message: "Message 5"},
+				LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: buildDate(2014, 06, 01), Message: "Message 6"},
+			}
+			Expect(
+				dbmap.Insert(&logRecords[0], &logRecords[1], &logRecords[2],
+					&logRecords[3], &logRecords[4], &logRecords[5]),
+			).To(Succeed())
 
-	suite.Len(logRecords, 2)
-	suite.Equal(applications[0].Id, logRecords[1].ApplicationId)
-	suite.Equal("Message two", logRecords[1].Message)
-	suite.Equal(3, logRecords[1].Level)
+			tags := []Tag{Tag{0, "tag1"}, Tag{0, "tag2"}}
+			Expect(dbmap.Insert(&tags[0], &tags[1])).To(Succeed())
 
-	suite.Len(tags, 3, "Tags should be reusable")
-	suite.Equal("tag2", tags[1].Name)
-	suite.Equal("tag3", tags[2].Name)
+			logRecordTags := []LogRecordTag{
+				LogRecordTag{logRecords[3].Id, tags[0].Id},
+				LogRecordTag{logRecords[3].Id, tags[1].Id},
+			}
+			Expect(
+				dbmap.Insert(&logRecordTags[0], &logRecordTags[1]),
+			).To(Succeed())
 
-	suite.Len(logRecordsTags, 4)
-	suite.Equal(logRecords[1].Id, logRecordsTags[2].LogRecordId)
-	suite.Equal(tags[1].Id, logRecordsTags[2].TagId)
-	suite.Equal(logRecords[1].Id, logRecordsTags[3].LogRecordId)
-	suite.Equal(tags[2].Id, logRecordsTags[3].TagId)
-}
+			foundLogRecords, err := findLogRecords("testapp1", 2, []string{},
+				buildDate(2014, 01, 15), buildDate(2014, 05, 15), 1)
 
-func (suite *ModelsTestSuite) Test_findLogRecords_WithoutTags() {
-	applications := []Application{
-		Application{0, "testapp1"},
-		Application{0, "testapp2"},
-	}
-	suite.Nil(dbmap.Insert(&applications[0], &applications[1]))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(foundLogRecords).To(HaveLen(2))
 
-	logRecords := []LogRecord{
-		LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: suite.Date(2014, 01, 01), Message: "Message 1"},
-		LogRecord{ApplicationId: applications[1].Id, Level: 5, CreatedAt: suite.Date(2014, 02, 01), Message: "Message 2"},
-		LogRecord{ApplicationId: applications[0].Id, Level: 1, CreatedAt: suite.Date(2014, 03, 01), Message: "Message 3"},
-		LogRecord{ApplicationId: applications[0].Id, Level: 2, CreatedAt: suite.Date(2014, 04, 01), Message: "Message 4"},
-		LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: suite.Date(2014, 05, 01), Message: "Message 5"},
-		LogRecord{ApplicationId: applications[0].Id, Level: 5, CreatedAt: suite.Date(2014, 06, 01), Message: "Message 6"},
-	}
-	suite.Nil(dbmap.Insert(&logRecords[0], &logRecords[1], &logRecords[2],
-		&logRecords[3], &logRecords[4], &logRecords[5]))
+			Expect(foundLogRecords[0].Id).To(Equal(logRecords[4].Id))
+			Expect(foundLogRecords[0].Application).To(Equal(applications[0]))
+			Expect(foundLogRecords[0].Level).To(Equal(logRecords[4].Level))
+			Expect(foundLogRecords[0].CreatedAt.UTC()).To(Equal(logRecords[4].CreatedAt.UTC()))
+			Expect(foundLogRecords[0].Message).To(Equal(logRecords[4].Message))
+			Expect(foundLogRecords[0].Tags).To(BeEmpty())
 
-	tags := []Tag{Tag{0, "tag1"}, Tag{0, "tag2"}}
-	suite.Nil(dbmap.Insert(&tags[0], &tags[1]))
+			Expect(foundLogRecords[1].Id).To(Equal(logRecords[3].Id))
+			Expect(foundLogRecords[1].Application).To(Equal(applications[0]))
+			Expect(foundLogRecords[1].Level).To(Equal(logRecords[3].Level))
+			Expect(foundLogRecords[1].CreatedAt.UTC()).To(Equal(logRecords[3].CreatedAt.UTC()))
+			Expect(foundLogRecords[1].Message).To(Equal(logRecords[3].Message))
+			Expect(foundLogRecords[1].Tags).To(Equal(tags))
+		})
 
-	logRecordTags := []LogRecordTag{
-		LogRecordTag{logRecords[3].Id, tags[0].Id},
-		LogRecordTag{logRecords[3].Id, tags[1].Id},
-	}
-	suite.Nil(dbmap.Insert(&logRecordTags[0], &logRecordTags[1]))
+		Context("with tags", func() {
+			It("should also filter log records by tags", func() {
+				application := Application{0, "testapp1"}
+				Expect(dbmap.Insert(&application)).To(Succeed())
 
-	foundLogRecords, err := findLogRecords("testapp1", 2, []string{},
-		suite.Date(2014, 01, 15), suite.Date(2014, 05, 15), 1)
+				tags := []Tag{Tag{0, "tag1"}, Tag{0, "tag2"}, Tag{0, "tag3"}}
+				Expect(dbmap.Insert(&tags[0], &tags[1], &tags[2])).To(Succeed())
 
-	suite.Nil(err)
-	suite.Len(foundLogRecords, 2)
+				logRecords := []LogRecord{
+					LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: buildDate(2014, 02, 01), Message: "Message 1"},
+					LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: buildDate(2014, 02, 01), Message: "Message 2"},
+					LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: buildDate(2014, 02, 01), Message: "Message 3"},
+				}
+				Expect(
+					dbmap.Insert(&logRecords[0], &logRecords[1], &logRecords[2]),
+				).To(Succeed())
 
-	suite.Equal(logRecords[4].Id, foundLogRecords[0].Id)
-	suite.Equal(applications[0], foundLogRecords[0].Application)
-	suite.Equal(logRecords[4].Level, foundLogRecords[0].Level)
-	suite.Equal(logRecords[4].CreatedAt, foundLogRecords[0].CreatedAt)
-	suite.Equal(logRecords[4].Message, foundLogRecords[0].Message)
-	suite.Empty(foundLogRecords[0].Tags)
+				logRecordTags := []LogRecordTag{
+					LogRecordTag{logRecords[0].Id, tags[0].Id},
+					LogRecordTag{logRecords[0].Id, tags[1].Id},
+					LogRecordTag{logRecords[0].Id, tags[2].Id},
+					LogRecordTag{logRecords[1].Id, tags[0].Id},
+					LogRecordTag{logRecords[1].Id, tags[1].Id},
+					LogRecordTag{logRecords[2].Id, tags[1].Id},
+					LogRecordTag{logRecords[2].Id, tags[2].Id},
+				}
+				Expect(
+					dbmap.Insert(&logRecordTags[0], &logRecordTags[1], &logRecordTags[2],
+						&logRecordTags[3], &logRecordTags[4], &logRecordTags[5],
+						&logRecordTags[6]),
+				).To(Succeed())
 
-	suite.Equal(logRecords[3].Id, foundLogRecords[1].Id)
-	suite.Equal(applications[0], foundLogRecords[1].Application)
-	suite.Equal(logRecords[3].Level, foundLogRecords[1].Level)
-	suite.Equal(logRecords[3].CreatedAt, foundLogRecords[1].CreatedAt)
-	suite.Equal(logRecords[3].Message, foundLogRecords[1].Message)
-	suite.Equal(tags, foundLogRecords[1].Tags)
-}
+				foundLogRecords, err := findLogRecords("testapp1", 2, []string{"tag1", "tag2"},
+					buildDate(2014, 01, 15), buildDate(2014, 05, 15), 1)
 
-func (suite *ModelsTestSuite) Test_findLogRecords_WithTags() {
-	application := Application{0, "testapp1"}
-	suite.Nil(dbmap.Insert(&application))
+				Expect(err).NotTo(HaveOccurred())
 
-	tags := []Tag{Tag{0, "tag1"}, Tag{0, "tag2"}, Tag{0, "tag3"}}
-	suite.Nil(dbmap.Insert(&tags[0], &tags[1], &tags[2]))
+				Expect(foundLogRecords).To(HaveLen(2))
+				Expect(foundLogRecords[0].Id).To(Equal(logRecords[1].Id))
+				Expect(foundLogRecords[1].Id).To(Equal(logRecords[0].Id))
+			})
+		})
 
-	logRecords := []LogRecord{
-		LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: suite.Date(2014, 02, 01), Message: "Message 1"},
-		LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: suite.Date(2014, 02, 01), Message: "Message 2"},
-		LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: suite.Date(2014, 02, 01), Message: "Message 3"},
-	}
-	suite.Nil(dbmap.Insert(&logRecords[0], &logRecords[1], &logRecords[2]))
+		Context("with pagination", func() {
+			It("should paginate results", func() {
+				application := Application{0, "testapp1"}
+				Expect(dbmap.Insert(&application)).To(Succeed())
 
-	logRecordTags := []LogRecordTag{
-		LogRecordTag{logRecords[0].Id, tags[0].Id},
-		LogRecordTag{logRecords[0].Id, tags[1].Id},
-		LogRecordTag{logRecords[0].Id, tags[2].Id},
-		LogRecordTag{logRecords[1].Id, tags[0].Id},
-		LogRecordTag{logRecords[1].Id, tags[1].Id},
-		LogRecordTag{logRecords[2].Id, tags[1].Id},
-		LogRecordTag{logRecords[2].Id, tags[2].Id},
-	}
-	suite.Nil(dbmap.Insert(&logRecordTags[0], &logRecordTags[1], &logRecordTags[2],
-		&logRecordTags[3], &logRecordTags[4], &logRecordTags[5], &logRecordTags[6]))
+				logRecords := make([]LogRecord, 110)
+				for i := 0; i < 110; i++ {
+					logRecords[i] = LogRecord{ApplicationId: application.Id, Level: 5,
+						CreatedAt: time.Now(), Message: "Message 1"}
+					Expect(dbmap.Insert(&logRecords[i])).To(Succeed())
+				}
 
-	foundLogRecords, err := findLogRecords("testapp1", 2, []string{"tag1", "tag2"},
-		suite.Date(2014, 01, 15), suite.Date(2014, 05, 15), 1)
+				foundLogRecords, err := findLogRecords("testapp1", 2, []string{},
+					buildDate(2014, 01, 01), buildDate(3014, 01, 01), 1)
 
-	suite.Nil(err)
-	suite.Len(foundLogRecords, 2)
+				Expect(err).NotTo(HaveOccurred())
 
-	suite.Equal(logRecords[1].Id, foundLogRecords[0].Id)
-	suite.Equal(logRecords[0].Id, foundLogRecords[1].Id)
-}
+				Expect(foundLogRecords).To(HaveLen(100))
+				Expect(foundLogRecords[0].Id).To(Equal(logRecords[109].Id))
+				Expect(foundLogRecords[99].Id).To(Equal(logRecords[10].Id))
 
-func (suite *ModelsTestSuite) Test_findLogRecords_Pagination() {
-	application := Application{0, "testapp1"}
-	suite.Nil(dbmap.Insert(&application))
+				foundLogRecords, err = findLogRecords("testapp1", 2, []string{},
+					buildDate(2014, 01, 01), buildDate(3014, 01, 01), 2)
 
-	logRecords := make([]LogRecord, 110)
-	for i := 0; i < 110; i++ {
-		logRecords[i] = LogRecord{ApplicationId: application.Id, Level: 5, CreatedAt: time.Now(), Message: "Message 1"}
-		dbmap.Insert(&logRecords[i])
-	}
+				Expect(err).NotTo(HaveOccurred())
 
-	foundLogRecords, err := findLogRecords("testapp1", 2, []string{},
-		suite.Date(2014, 01, 01), suite.Date(3014, 01, 01), 1)
-
-	suite.Nil(err)
-	suite.Len(foundLogRecords, 100)
-	suite.Equal(logRecords[109].Id, foundLogRecords[0].Id)
-	suite.Equal(logRecords[10].Id, foundLogRecords[99].Id)
-
-	foundLogRecords, err = findLogRecords("testapp1", 2, []string{},
-		suite.Date(2014, 01, 01), suite.Date(3014, 01, 01), 2)
-
-	suite.Nil(err)
-	suite.Len(foundLogRecords, 10)
-	suite.Equal(logRecords[9].Id, foundLogRecords[0].Id)
-	suite.Equal(logRecords[0].Id, foundLogRecords[9].Id)
-}
-
-func TestModels(t *testing.T) {
-	suite.Run(t, new(ModelsTestSuite))
-}
+				Expect(foundLogRecords).To(HaveLen(10))
+				Expect(foundLogRecords[0].Id).To(Equal(logRecords[9].Id))
+				Expect(foundLogRecords[9].Id).To(Equal(logRecords[0].Id))
+			})
+		})
+	})
+})

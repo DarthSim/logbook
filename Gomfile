@@ -4,5 +4,6 @@ gom 'github.com/mattn/go-sqlite3'
 gom 'code.google.com/p/gcfg'
 
 group :test do
-  gom 'github.com/stretchr/testify'
+  gom 'github.com/onsi/ginkgo/ginkgo'
+  gom 'github.com/onsi/gomega'
 end
