@@ -102,12 +102,12 @@ func createLogRecordTag(logRecord *LogRecord, tag *Tag) (logRecordTag LogRecordT
 }
 
 func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) (err error) {
-	existingTags, err := findTags(tagNames)
+	logRecord.Tags, err = findTags(tagNames)
 	if err != nil {
 		return
 	}
 
-	newTagsCount := len(tagNames) - len(existingTags)
+	newTagsCount := len(tagNames) - len(logRecord.Tags)
 
 	if newTagsCount > 0 {
 		newTags := make([]Tag, newTagsCount)
@@ -119,7 +119,7 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) (err error) {
 		for _, tagName := range tagNames {
 			exists = false
 
-			for _, tag := range existingTags {
+			for _, tag := range logRecord.Tags {
 				if tag.Name == tagName {
 					exists = true
 					break
@@ -140,16 +140,14 @@ func addTagsToLogRecord(logRecord *LogRecord, tagNames []string) (err error) {
 			}
 		}
 
-		existingTags = append(existingTags, newTags...)
+		logRecord.Tags = append(logRecord.Tags, newTags...)
 	}
 
-	for _, tag := range existingTags {
+	for _, tag := range logRecord.Tags {
 		if _, err = createLogRecordTag(logRecord, &tag); err != nil {
 			return
 		}
 	}
-
-	logRecord.Tags = existingTags
 
 	return
 }
