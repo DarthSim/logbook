@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/boltdb/bolt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,12 +25,29 @@ var _ = BeforeSuite(func() {
 	config.Auth.User = "test"
 	config.Auth.Password = "test"
 
+	config.Pagination.PerPage = 100
+
 	initLogger()
+
+	initDB()
 })
 
 var _ = AfterSuite(func() {
+	closeDB()
+	os.Remove(absPathToFile(config.Database.Path))
+
 	closeLogger()
 	os.Remove(absPathToFile(config.Log.Path))
+})
+
+var _ = BeforeEach(func() {
+	db.Update(func(tx *bolt.Tx) (err error) {
+		err = tx.ForEach(func(name []byte, b *bolt.Bucket) (err error) {
+			err = tx.DeleteBucket(name)
+			return
+		})
+		return
+	})
 })
 
 func TestLogbook(t *testing.T) {

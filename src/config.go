@@ -28,6 +28,9 @@ type Config struct {
 		Path        string
 		LogDatabase bool
 	}
+	Pagination struct {
+		PerPage int
+	}
 }
 
 var config Config

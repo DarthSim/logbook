@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"time"
 
@@ -52,13 +51,6 @@ var _ = Describe("Actions", func() {
 
 	BeforeEach(func() {
 		router = setupRouter()
-
-		initDB()
-	})
-
-	AfterEach(func() {
-		closeDB()
-		os.Remove(absPathToFile(config.Database.Path))
 	})
 
 	AssertSuccess := func() {
@@ -96,13 +88,11 @@ var _ = Describe("Actions", func() {
 		AssertSuccess()
 
 		It("should respond with created log record", func() {
-			parsedRes := LogRecordResponse{}
+			parsedRes := LogRecord{}
 			Expect(
 				json.Unmarshal(response.Body.Bytes(), &parsedRes),
 			).To(Succeed())
 
-			Expect(parsedRes.Id).To(BeAssignableToTypeOf(int64(1)))
-			Expect(parsedRes.Application).To(Equal("apptest"))
 			Expect(parsedRes.Message).To(Equal("Lorem ipsum"))
 			Expect(parsedRes.Level).To(Equal(1))
 			Expect(parsedRes.CreatedAt).To(BeAssignableToTypeOf(time.Now()))
@@ -167,12 +157,23 @@ var _ = Describe("Actions", func() {
 	})
 
 	Describe("/:application/get", func() {
+		generateLogRecord := func(application, message string, level int, tags ...string) {
+			logRecord := LogRecord{
+				Message: message,
+				Level:   level,
+				Tags:    tags,
+			}
+			Expect(
+				saveLogRecord(application, &logRecord),
+			).To(Succeed())
+		}
+
 		BeforeEach(func() {
-			createLogRecord("testapp1", "Message one", 1, []string{"tag2, tag3", "tag4"})
-			createLogRecord("testapp1", "Message two", 2, []string{"tag2", "tag3", "tag4"})
-			createLogRecord("testapp1", "Message three", 3, []string{"tag3", "tag4", "tag5"})
-			createLogRecord("testapp1", "Message four", 3, []string{"tag1", "tag2", "tag3"})
-			createLogRecord("testapp2", "Message five", 3, []string{"tag3", "tag4"})
+			generateLogRecord("testapp1", "Message one", 1, "tag2, tag3", "tag4")
+			generateLogRecord("testapp1", "Message two", 2, "tag2", "tag3", "tag4")
+			generateLogRecord("testapp1", "Message three", 3, "tag3", "tag4", "tag5")
+			generateLogRecord("testapp1", "Message four", 3, "tag1", "tag2", "tag3")
+			generateLogRecord("testapp2", "Message five", 3, "tag3", "tag4")
 
 			query = fmt.Sprintf(
 				"level=2&tags=tag3,tag4&start_time=%v&end_time=%v&page=1",
@@ -190,22 +191,18 @@ var _ = Describe("Actions", func() {
 		AssertSuccess()
 
 		It("should respond with found log records", func() {
-			parsedRes := LogRecordsResponse{}
+			parsedRes := LogRecords{}
 			Expect(
 				json.Unmarshal(response.Body.Bytes(), &parsedRes),
 			).To(Succeed())
 
 			Expect(parsedRes).To(HaveLen(2))
 
-			Expect(parsedRes[0].Id).To(BeAssignableToTypeOf(int64(1)))
-			Expect(parsedRes[0].Application).To(Equal("testapp1"))
 			Expect(parsedRes[0].Message).To(Equal("Message three"))
 			Expect(parsedRes[0].Level).To(Equal(3))
 			Expect(parsedRes[0].CreatedAt).To(BeAssignableToTypeOf(time.Now()))
 			Expect(parsedRes[0].Tags).To(ConsistOf("tag3", "tag4", "tag5"))
 
-			Expect(parsedRes[1].Id).To(BeAssignableToTypeOf(int64(1)))
-			Expect(parsedRes[1].Application).To(Equal("testapp1"))
 			Expect(parsedRes[1].Message).To(Equal("Message two"))
 			Expect(parsedRes[1].Level).To(Equal(2))
 			Expect(parsedRes[1].CreatedAt).To(BeAssignableToTypeOf(time.Now()))

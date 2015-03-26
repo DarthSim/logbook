@@ -1,6 +1,5 @@
 gom 'github.com/gorilla/mux'
-gom 'github.com/go-gorp/gorp'
-gom 'github.com/mattn/go-sqlite3'
+gom 'github.com/boltdb/bolt'
 gom 'code.google.com/p/gcfg'
 
 group :test do

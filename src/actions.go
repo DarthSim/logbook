@@ -8,26 +8,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
-// Response formats ============================================================
-
-type LogRecordResponse struct {
-	Id          int64     `json:"id"`
-	Application string    `json:"application"`
-	Level       int       `json:"level"`
-	CreatedAt   time.Time `json:"created_at"`
-	Message     string    `json:"message"`
-	Tags        []string  `json:"tags"`
-}
-
-type LogRecordsResponse []LogRecordResponse
-
-// end of Response formats
-
 // Helpers =====================================================================
-func extractTagNames(form url.Values) []string {
+func extractTags(form url.Values) []string {
 	if len(form["tags[]"]) > 0 {
 		return form["tags[]"]
 	} else if len(form["tags"]) > 0 {
@@ -41,24 +25,7 @@ func extractTagNames(form url.Values) []string {
 
 // Action: Create log ==========================================================
 
-func buildCreateLogResponse(logRecord *LogRecord) ([]byte, error) {
-	response := LogRecordResponse{
-		Id:          logRecord.Id,
-		Application: logRecord.Application.Name,
-		Level:       logRecord.Level,
-		CreatedAt:   logRecord.CreatedAt,
-		Message:     logRecord.Message,
-		Tags:        make([]string, len(logRecord.Tags)),
-	}
-
-	for i, tag := range logRecord.Tags {
-		response.Tags[i] = tag.Name
-	}
-
-	return json.Marshal(response)
-}
-
-func checkCreateLogParams(msg string, lvl string, tagNames []string) error {
+func checkCreateLogParams(msg string, lvl string, tags []string) error {
 	if msg == "" {
 		return errors.New("Message should be defined")
 	}
@@ -67,8 +34,8 @@ func checkCreateLogParams(msg string, lvl string, tagNames []string) error {
 		return errors.New("Level should be a number between 1 and 5")
 	}
 
-	for _, tagName := range tagNames {
-		if tagName == "" {
+	for _, tag := range tags {
+		if tag == "" {
 			return errors.New("Tags contain an empty string")
 		}
 	}
@@ -86,25 +53,29 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	appName := vars["application"]
+	application := vars["application"]
 	message := req.Form.Get("message")
 	levelStr := req.Form.Get("level")
-	tagNames := extractTagNames(req.Form)
+	tags := extractTags(req.Form)
 
-	if err = checkCreateLogParams(message, levelStr, tagNames); err != nil {
+	if err = checkCreateLogParams(message, levelStr, tags); err != nil {
 		serverError(rw, err, 422)
 		return
 	}
 
 	level, _ := strconv.Atoi(levelStr)
+	logRecord := LogRecord{
+		Message: message,
+		Level:   level,
+		Tags:    tags,
+	}
 
-	logRecord, err := createLogRecord(appName, message, level, tagNames)
-	if err != nil {
+	if err = saveLogRecord(application, &logRecord); err != nil {
 		serverError(rw, err, 500)
 		return
 	}
 
-	response, err := buildCreateLogResponse(&logRecord)
+	response, err := json.Marshal(logRecord)
 	if err != nil {
 		serverError(rw, err, 500)
 		return
@@ -117,32 +88,12 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 
 // Action: Get logs ============================================================
 
-func buildGetLogsResponse(logRecords *[]LogRecord) ([]byte, error) {
-	response := make([]LogRecordResponse, len(*logRecords))
-
-	for i, logRecord := range *logRecords {
-		response[i] = LogRecordResponse{
-			Id:          logRecord.Id,
-			Application: logRecord.Application.Name,
-			Level:       logRecord.Level,
-			CreatedAt:   logRecord.CreatedAt,
-			Message:     logRecord.Message,
-			Tags:        make([]string, len(logRecord.Tags)),
-		}
-		for n, tag := range logRecord.Tags {
-			response[i].Tags[n] = tag.Name
-		}
-	}
-
-	return json.Marshal(response)
-}
-
-func checkGetLogParams(lvl string, tagNames []string, startTime string, endTime string, page string) error {
+func checkGetLogParams(lvl string, tags []string, startTime string, endTime string, page string) error {
 	if len(lvl) != 1 || lvl < "1" || lvl > "5" {
 		return errors.New("Level should be a number between 1 and 5")
 	}
 
-	for _, tagName := range tagNames {
+	for _, tagName := range tags {
 		if tagName == "" {
 			return errors.New("Tags contain an empty string")
 		}
@@ -173,18 +124,18 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	appName := vars["application"]
+	application := vars["application"]
 	levelStr := req.Form.Get("level")
 	startTimeStr := req.Form.Get("start_time")
 	endTimeStr := req.Form.Get("end_time")
-	tagNames := extractTagNames(req.Form)
+	tags := extractTags(req.Form)
 	pageStr := req.Form.Get("page")
 
 	if pageStr == "" {
 		pageStr = "1"
 	}
 
-	err = checkGetLogParams(levelStr, tagNames, startTimeStr, endTimeStr, pageStr)
+	err = checkGetLogParams(levelStr, tags, startTimeStr, endTimeStr, pageStr)
 	if err != nil {
 		serverError(rw, err, 422)
 		return
@@ -195,13 +146,13 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 	startTime, _ := parseTime(startTimeStr, false)
 	endTime, _ := parseTime(endTimeStr, true)
 
-	logRecords, err := findLogRecords(appName, level, tagNames, startTime, endTime, page)
+	logRecords, err := loadLogRecords(application, level, tags, startTime, endTime, page)
 	if err != nil {
 		serverError(rw, err, 500)
 		return
 	}
 
-	response, err := buildGetLogsResponse(&logRecords)
+	response, err := json.Marshal(&logRecords)
 	if err != nil {
 		serverError(rw, err, 500)
 		return

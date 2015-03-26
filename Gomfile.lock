@@ -1,0 +1,3 @@
+gom 'github.com/gorilla/mux', :commit => '8096f47503459bcc74d1f4c487b7e6e42e5746b5'
+gom 'github.com/boltdb/bolt', :commit => '63ec32ef321972daedc5f45f3b799adac9dda110'
+gom 'code.google.com/p/gcfg', :commit => 'c2d3050044d05357eaf6c3547249ba57c5e235cb'

@@ -9,12 +9,11 @@ address = 127.0.0.1
 port = 11610
 
 [database]
-path = ../db/logbook.sqlite3
-lockTimeout = 1000
-retryDelay = 10
-maxOpenConnections = 5
-maxIdleConnections = 5
+path = ../db/logbook.db
 
 [log]
 path = ../log/logbook.log
 logDatabase = false
+
+[pagination]
+perPage = 100
