@@ -44,9 +44,7 @@ var _ = Describe("Models", func() {
 				appBucket := tx.Bucket([]byte("apptest"))
 				Expect(appBucket).NotTo(BeNil())
 
-				recordBucket := appBucket.Bucket(
-					[]byte(logRecord.CreatedAt.UTC().Format(recordKeyFormat)),
-				)
+				recordBucket := appBucket.Bucket(recordKey(logRecord.CreatedAt))
 				Expect(recordBucket).NotTo(BeNil())
 
 				Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))
@@ -76,9 +74,7 @@ var _ = Describe("Models", func() {
 					appBucket := tx.Bucket([]byte("apptest"))
 					Expect(appBucket).NotTo(BeNil())
 
-					recordBucket := appBucket.Bucket(
-						[]byte(logRecord.CreatedAt.UTC().Format(recordKeyFormat)),
-					)
+					recordBucket := appBucket.Bucket(recordKey(logRecord.CreatedAt))
 					Expect(recordBucket).NotTo(BeNil())
 
 					Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))

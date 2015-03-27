@@ -10,8 +10,6 @@ import (
 
 var db *bolt.DB
 
-const recordKeyFormat = "2006-02-01T15:04:05.000000000"
-
 type LogRecord struct {
 	Message   string    `json:"message"`
 	Level     int       `json:"level"`
@@ -32,6 +30,10 @@ func closeDB() {
 	db.Close()
 }
 
+func recordKey(createdAt time.Time) []byte {
+	return []byte(createdAt.UTC().Format("2006-02-01T15:04:05.000000000"))
+}
+
 func tagKey(tag string) []byte {
 	buf := bytes.NewBufferString("tag_")
 	buf.WriteString(tag)
@@ -41,8 +43,6 @@ func tagKey(tag string) []byte {
 func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 	err = db.Batch(func(tx *bolt.Tx) (err error) {
 		logRecord.CreatedAt = time.Now()
-
-		key := logRecord.CreatedAt.UTC().Format(recordKeyFormat)
 
 		var valueBuf bytes.Buffer
 		if err = gob.NewEncoder(&valueBuf).Encode(logRecord); err != nil {
@@ -54,7 +54,7 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 			return
 		}
 
-		recordBucket, err := appBucket.CreateBucket([]byte(key))
+		recordBucket, err := appBucket.CreateBucket(recordKey(logRecord.CreatedAt))
 		if err != nil {
 			return
 		}
@@ -87,8 +87,8 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 
 		cursor := appBucket.Cursor()
 
-		keyStart := []byte(startTime.UTC().Format(recordKeyFormat))
-		keyEnd := []byte(endTime.UTC().Format(recordKeyFormat))
+		keyStart := recordKey(startTime)
+		keyEnd := recordKey(endTime)
 
 		logRecords = LogRecords{}
 		offset := (page - 1) * config.Pagination.PerPage
