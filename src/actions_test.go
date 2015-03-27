@@ -198,15 +198,15 @@ var _ = Describe("Actions", func() {
 
 			Expect(parsedRes).To(HaveLen(2))
 
-			Expect(parsedRes[0].Message).To(Equal("Message three"))
-			Expect(parsedRes[0].Level).To(Equal(3))
+			Expect(parsedRes[0].Message).To(Equal("Message two"))
+			Expect(parsedRes[0].Level).To(Equal(2))
 			Expect(parsedRes[0].CreatedAt).To(BeAssignableToTypeOf(time.Now()))
-			Expect(parsedRes[0].Tags).To(ConsistOf("tag3", "tag4", "tag5"))
+			Expect(parsedRes[0].Tags).To(ConsistOf("tag2", "tag3", "tag4"))
 
-			Expect(parsedRes[1].Message).To(Equal("Message two"))
-			Expect(parsedRes[1].Level).To(Equal(2))
+			Expect(parsedRes[1].Message).To(Equal("Message three"))
+			Expect(parsedRes[1].Level).To(Equal(3))
 			Expect(parsedRes[1].CreatedAt).To(BeAssignableToTypeOf(time.Now()))
-			Expect(parsedRes[1].Tags).To(ConsistOf("tag2", "tag3", "tag4"))
+			Expect(parsedRes[1].Tags).To(ConsistOf("tag3", "tag4", "tag5"))
 		})
 
 		Context("without tags", func() {

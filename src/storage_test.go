@@ -129,15 +129,15 @@ var _ = Describe("Models", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(loadedLogRecords).To(HaveLen(2))
 
-			Expect(loadedLogRecords[0].Level).To(Equal(logRecords[4].Level))
-			Expect(loadedLogRecords[0].CreatedAt.UTC()).To(Equal(logRecords[4].CreatedAt.UTC()))
-			Expect(loadedLogRecords[0].Message).To(Equal(logRecords[4].Message))
-			Expect(loadedLogRecords[0].Tags).To(BeEmpty())
+			Expect(loadedLogRecords[0].Level).To(Equal(logRecords[3].Level))
+			Expect(loadedLogRecords[0].CreatedAt.UTC()).To(Equal(logRecords[3].CreatedAt.UTC()))
+			Expect(loadedLogRecords[0].Message).To(Equal(logRecords[3].Message))
+			Expect(loadedLogRecords[0].Tags).To(Equal(logRecords[3].Tags))
 
-			Expect(loadedLogRecords[1].Level).To(Equal(logRecords[3].Level))
-			Expect(loadedLogRecords[1].CreatedAt.UTC()).To(Equal(logRecords[3].CreatedAt.UTC()))
-			Expect(loadedLogRecords[1].Message).To(Equal(logRecords[3].Message))
-			Expect(loadedLogRecords[1].Tags).To(Equal(logRecords[3].Tags))
+			Expect(loadedLogRecords[1].Level).To(Equal(logRecords[4].Level))
+			Expect(loadedLogRecords[1].CreatedAt.UTC()).To(Equal(logRecords[4].CreatedAt.UTC()))
+			Expect(loadedLogRecords[1].Message).To(Equal(logRecords[4].Message))
+			Expect(loadedLogRecords[1].Tags).To(BeEmpty())
 		})
 
 		Context("with tags", func() {
@@ -154,8 +154,8 @@ var _ = Describe("Models", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(loadedLogRecords).To(HaveLen(2))
-				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[1].Message))
-				Expect(loadedLogRecords[1].Message).To(Equal(logRecords[0].Message))
+				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[0].Message))
+				Expect(loadedLogRecords[1].Message).To(Equal(logRecords[1].Message))
 			})
 		})
 
@@ -174,8 +174,8 @@ var _ = Describe("Models", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(loadedLogRecords).To(HaveLen(100))
-				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[109].Message))
-				Expect(loadedLogRecords[99].Message).To(Equal(logRecords[10].Message))
+				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[0].Message))
+				Expect(loadedLogRecords[99].Message).To(Equal(logRecords[99].Message))
 
 				loadedLogRecords, err = loadLogRecords("testapp1", 2, []string{},
 					logRecords[0].CreatedAt, logRecords[109].CreatedAt, 2)
@@ -183,8 +183,8 @@ var _ = Describe("Models", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(loadedLogRecords).To(HaveLen(10))
-				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[9].Message))
-				Expect(loadedLogRecords[9].Message).To(Equal(logRecords[0].Message))
+				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[100].Message))
+				Expect(loadedLogRecords[9].Message).To(Equal(logRecords[109].Message))
 			})
 		})
 	})

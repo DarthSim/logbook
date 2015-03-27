@@ -103,15 +103,12 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 		cursor := appBucket.Cursor()
 
 		keyStart := []byte(startTime.UTC().Format(recordKeyFormat))
-		keyEnd := []byte(endTime.UTC().Format(recordKeyFormat) + "_end")
-
-		key := reverseSeek(cursor, keyEnd)
+		keyEnd := []byte(endTime.UTC().Format(recordKeyFormat))
 
 		logRecords = LogRecords{}
 		offset := (page - 1) * config.Pagination.PerPage
 
-		for ; key != nil && bytes.Compare(key, keyStart) >= 0; key, _ = cursor.Prev() {
-
+		for key, _ := cursor.Seek(keyStart); key != nil && bytes.Compare(key, keyEnd) <= 0; key, _ = cursor.Next() {
 			recordBucket := appBucket.Bucket(key)
 			if recordBucket == nil {
 				// just for sure
