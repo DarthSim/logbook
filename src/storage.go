@@ -100,9 +100,11 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 				continue
 			}
 
-			recordLvl := recordBucket.Get([]byte("level"))
-			if recordLvl == nil || recordLvl[0] < byte(lvl) {
-				continue
+			if lvl > 1 {
+				recordLvl := recordBucket.Get([]byte("level"))
+				if recordLvl == nil || recordLvl[0] < byte(lvl) {
+					continue
+				}
 			}
 
 			tagMissed := false
