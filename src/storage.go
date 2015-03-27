@@ -38,21 +38,6 @@ func tagKey(tag string) []byte {
 	return buf.Bytes()
 }
 
-func reverseSeek(cursor *bolt.Cursor, keyEnd []byte) (key []byte) {
-	keyBuf := bytes.NewBuffer(keyEnd)
-	keyBuf.WriteString("_send")
-
-	key, _ = cursor.Seek(keyBuf.Bytes())
-
-	if key == nil {
-		key, _ = cursor.Last()
-	} else {
-		key, _ = cursor.Prev()
-	}
-
-	return
-}
-
 func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 	err = db.Batch(func(tx *bolt.Tx) (err error) {
 		logRecord.CreatedAt = time.Now()
