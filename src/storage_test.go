@@ -114,7 +114,7 @@ var _ = Describe("Models", func() {
 		}
 
 		It("should return return log records filtered by app level and time", func() {
-			logRecords := []LogRecord{
+			logRecords := LogRecords{
 				generateLogRecord("testapp1", "Message 1", 5),
 				generateLogRecord("testapp2", "Message 2", 5),
 				generateLogRecord("testapp1", "Message 3", 1),
@@ -142,7 +142,7 @@ var _ = Describe("Models", func() {
 
 		Context("with tags", func() {
 			It("should also filter log records by tags", func() {
-				logRecords := []LogRecord{
+				logRecords := LogRecords{
 					generateLogRecord("testapp1", "Message 1", 5, "tag1", "tag2", "tag3"),
 					generateLogRecord("testapp1", "Message 2", 5, "tag1", "tag2"),
 					generateLogRecord("testapp1", "Message 3", 5, "tag2", "tag3"),
@@ -161,7 +161,7 @@ var _ = Describe("Models", func() {
 
 		Context("with pagination", func() {
 			It("should paginate results", func() {
-				logRecords := make([]LogRecord, 110)
+				logRecords := make(LogRecords, 110)
 				for i := 0; i < 110; i++ {
 					logRecords[i] = generateLogRecord(
 						"testapp1", fmt.Sprintf("Message%v", i), 5,

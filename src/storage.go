@@ -93,7 +93,7 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 	return
 }
 
-func loadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords []LogRecord, err error) {
+func loadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords LogRecords, err error) {
 	err = db.View(func(tx *bolt.Tx) (err error) {
 		appBucket := tx.Bucket([]byte(application))
 		if appBucket == nil {
