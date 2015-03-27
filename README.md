@@ -9,7 +9,7 @@ __It's better than plain text files.__ You can store your logs in text files but
 __It's easier than big logs collectors.__ You can use big powerful log collectors like Graylog2 or Logstash, but this means you will need MongoDB, ElasticSearch and so on. Looks like overhead, doesn't it?
 
 ## Installation
-You need Go and [Gom](https://github.com/mattn/gom) to build the project.
+You need Go 1.4+ and [Gom](https://github.com/mattn/gom) to build the project.
 
 #### Build without copying to `/opt`
 
