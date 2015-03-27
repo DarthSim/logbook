@@ -9,7 +9,7 @@ __It's better than plain text files.__ You can store your logs in text files but
 __It's easier than big logs collectors.__ You can use big powerful log collectors like Graylog2 or Logstash, but this means you will need MongoDB, ElasticSearch and so on. Looks like overhead, doesn't it?
 
 ## Installation
-You will need Go, [Gom](https://github.com/mattn/gom) and SQLite3 to build the project.
+You need Go and [Gom](https://github.com/mattn/gom) to build the project.
 
 #### Build without copying to `/opt`
 
@@ -57,8 +57,6 @@ curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags
 
 ```json
 {
-  "id": 1,
-  "application": "testapp",
   "message": "Lorem ipsum dolor",
   "level": 3,
   "tags": ["tag1", "tag2", "tag3"],
@@ -73,7 +71,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 * __start_time__ - search log messages after the given datetime
 * __end_time__ - search log messages before the given datetime
 * __tags (optional)__ - array of tags. Can be either array or string separated by comma
-* __page (optional)__ - results page. Logbook returns 100 results per page. Default page number is 1
+* __page (optional)__ - results page. Logbook returns 100 results per page by default (you can change this number in the config file). Default page number is 1
 
 Example:
 
@@ -84,16 +82,12 @@ curl --user user:password "127.0.0.1:11610/testapp/get?level=3&start_time=2014-0
 ```json
 [
   {
-    "id": 1,
-    "application": "testapp",
     "message": "Lorem ipsum dolor",
     "level": 3,
     "tags": ["tag1", "tag2", "tag3"],
     "created_at": "2014-08-28T18:12:07.062186202+07:00"
   },
   {
-    "id": 2,
-    "application": "testapp",
     "message": "Sit amet",
     "level": 4,
     "tags": ["tag1", "tag2"],
