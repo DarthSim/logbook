@@ -1,6 +1,7 @@
 gom 'github.com/gorilla/mux'
 gom 'github.com/boltdb/bolt'
 gom 'code.google.com/p/gcfg'
+gom 'gopkg.in/mgo.v2/bson'
 
 group :test do
   gom 'github.com/onsi/ginkgo/ginkgo'

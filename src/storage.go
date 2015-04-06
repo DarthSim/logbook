@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"encoding/gob"
 	"time"
 
 	"github.com/boltdb/bolt"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var db *bolt.DB
@@ -44,8 +44,8 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 	err = db.Batch(func(tx *bolt.Tx) (err error) {
 		logRecord.CreatedAt = time.Now()
 
-		var valueBuf bytes.Buffer
-		if err = gob.NewEncoder(&valueBuf).Encode(logRecord); err != nil {
+		data, err := bson.Marshal(&logRecord)
+		if err != nil {
 			return
 		}
 
@@ -69,7 +69,7 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 			}
 		}
 
-		if err = recordBucket.Put([]byte("record"), valueBuf.Bytes()); err != nil {
+		if err = recordBucket.Put([]byte("record"), data); err != nil {
 			return
 		}
 
@@ -130,8 +130,7 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 				continue
 			}
 
-			dec := gob.NewDecoder(bytes.NewBuffer(record))
-			if err = dec.Decode(&logRecord); err != nil {
+			if err = bson.Unmarshal(record, &logRecord); err != nil {
 				return
 			}
 

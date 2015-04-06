@@ -1,5 +1,6 @@
 gom 'github.com/gorilla/mux', :commit => '8096f47503459bcc74d1f4c487b7e6e42e5746b5'
 gom 'github.com/boltdb/bolt', :commit => '63ec32ef321972daedc5f45f3b799adac9dda110'
 gom 'code.google.com/p/gcfg', :commit => 'c2d3050044d05357eaf6c3547249ba57c5e235cb'
+gom 'gopkg.in/mgo.v2/bson'
 gom 'github.com/onsi/ginkgo/ginkgo'
 gom 'github.com/onsi/gomega', :commit => 'e7b2cd96b5633fbc5f0c221159a5c1e85323f770'
