@@ -47,12 +47,12 @@ To save log message you need to send POST request to `/{application}/put` with t
 
 * __level__ - level of the log message
 * __message__ - log message
-* __tags (optional)__ - list of tags. Can be either array or string separated by comma
+* __tags (optional)__ - string of tags separated by comma
 
 Example:
 
 ```bash
-curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags[]=tag1&tags[]=tag2&tags[]=tag3" 127.0.0.1:11610/testapp/put
+curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags=tag1,tag2,tag3" 127.0.0.1:11610/testapp/put
 ```
 
 ```json
@@ -70,7 +70,7 @@ To get log messages you need to send GET request to `/{application}/get` with th
 * __level__ - minimum level of log messages
 * __start_time__ - search log messages after the given datetime
 * __end_time__ - search log messages before the given datetime
-* __tags (optional)__ - array of tags. Can be either array or string separated by comma
+* __tags (optional)__ - string of tags separated by comma
 * __page (optional)__ - results page. Logbook returns 100 results per page by default (you can change this number in the config file). Default page number is 1
 
 Example:
