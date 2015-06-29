@@ -13,14 +13,9 @@ import (
 var _ = BeforeSuite(func() {
 	config = Config{}
 
-	config.Database.Path = "test.sqlite"
-	config.Database.LockTimeout = 1
-	config.Database.RetryDelay = 10
-	config.Database.MaxOpenConnections = 5
-	config.Database.MaxIdleConnections = 5
+	config.Database.Path = "test.db"
 
 	config.Log.Path = "test.log"
-	config.Log.LogDatabase = false
 
 	config.Auth.User = "test"
 	config.Auth.Password = "test"
