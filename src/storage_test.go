@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
+	"time"
 
 	"github.com/boltdb/bolt"
+	"gopkg.in/mgo.v2/bson"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,8 +13,7 @@ import (
 
 var _ = Describe("Models", func() {
 	decodeLogRecord := func(data []byte) (logRecord LogRecord) {
-		dec := gob.NewDecoder(bytes.NewBuffer(data))
-		err := dec.Decode(&logRecord)
+		err := bson.Unmarshal(data, &logRecord)
 		Expect(err).NotTo(HaveOccurred())
 		return
 	}
@@ -57,7 +56,9 @@ var _ = Describe("Models", func() {
 				Expect(parsedRecord.Message).To(Equal(logRecord.Message))
 				Expect(parsedRecord.Level).To(Equal(logRecord.Level))
 				Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
-				Expect(parsedRecord.CreatedAt).To(Equal(logRecord.CreatedAt))
+				Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
+					Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
+				)
 
 				return nil
 			})
@@ -87,8 +88,12 @@ var _ = Describe("Models", func() {
 					Expect(parsedRecord.Message).To(Equal(logRecord.Message))
 					Expect(parsedRecord.Level).To(Equal(logRecord.Level))
 					Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
-					Expect(parsedRecord.CreatedAt).To(Equal(logRecord.CreatedAt))
-					Expect(parsedRecord.CreatedAt).NotTo(Equal(oldCreatedAt))
+					Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
+						Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
+					)
+					Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).NotTo(
+						Equal(oldCreatedAt.Truncate(time.Millisecond)),
+					)
 
 					return nil
 				})
@@ -126,12 +131,16 @@ var _ = Describe("Models", func() {
 			Expect(loadedLogRecords).To(HaveLen(2))
 
 			Expect(loadedLogRecords[0].Level).To(Equal(logRecords[3].Level))
-			Expect(loadedLogRecords[0].CreatedAt.UTC()).To(Equal(logRecords[3].CreatedAt.UTC()))
+			Expect(loadedLogRecords[0].CreatedAt.Truncate(time.Millisecond)).To(
+				Equal(logRecords[3].CreatedAt.Truncate(time.Millisecond)),
+			)
 			Expect(loadedLogRecords[0].Message).To(Equal(logRecords[3].Message))
 			Expect(loadedLogRecords[0].Tags).To(Equal(logRecords[3].Tags))
 
 			Expect(loadedLogRecords[1].Level).To(Equal(logRecords[4].Level))
-			Expect(loadedLogRecords[1].CreatedAt.UTC()).To(Equal(logRecords[4].CreatedAt.UTC()))
+			Expect(loadedLogRecords[1].CreatedAt.Truncate(time.Millisecond)).To(
+				Equal(logRecords[4].CreatedAt.Truncate(time.Millisecond)),
+			)
 			Expect(loadedLogRecords[1].Message).To(Equal(logRecords[4].Message))
 			Expect(loadedLogRecords[1].Tags).To(BeEmpty())
 		})
