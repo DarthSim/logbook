@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"code.google.com/p/gcfg"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 )
 
 type Config struct {
@@ -33,14 +34,24 @@ var config Config
 func prepareConfig() {
 	configfile := flag.String(
 		"config",
-		"../logbook.conf",
+		"../logbook.yml",
 		"path to configuration file",
 	)
 
 	flag.Parse()
 
-	if err := gcfg.ReadFileInto(&config, absPathToFile(*configfile)); err != nil {
+	var (
+		confData []byte
+		err      error
+	)
+
+	if confData, err = ioutil.ReadFile(absPathToFile(*configfile)); err != nil {
 		fmt.Printf("Error opening config file: %v", err)
+		os.Exit(1)
+	}
+
+	if err = yaml.Unmarshal(confData, &config); err != nil {
+		fmt.Printf("Invalid config file format")
 		os.Exit(1)
 	}
 }
