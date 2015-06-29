@@ -18,15 +18,10 @@ type Config struct {
 		Port    string
 	}
 	Database struct {
-		Path               string
-		LockTimeout        int64
-		RetryDelay         int64
-		MaxOpenConnections int
-		MaxIdleConnections int
+		Path string
 	}
 	Log struct {
-		Path        string
-		LogDatabase bool
+		Path string
 	}
 	Pagination struct {
 		PerPage int
