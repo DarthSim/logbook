@@ -1,6 +1,5 @@
-gom 'github.com/gorilla/mux'
-gom 'github.com/gin-gonic/gin'
-gom 'github.com/boltdb/bolt'
+gom 'github.com/gin-gonic/gin', :commit => '4cc2de6207f4128624cbdd16be30f64966c67c08'
+gom 'github.com/boltdb/bolt', :commit => '04a3e85793043e76d41164037d0d7f9d53eecae3'
 gom 'gopkg.in/mgo.v2/bson'
 gom 'gopkg.in/yaml.v2'
 
