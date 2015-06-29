@@ -15,7 +15,7 @@ You need Go 1.4+ and [Gom](https://github.com/mattn/gom) to build the project.
 
 ```bash
 make
-cp logbook.conf.sample logbook.conf
+cp logbook.yml.sample logbook.yml
 
 # Launch Logbook
 bin/logbook
@@ -35,7 +35,7 @@ make && make install
 You can specify the path to the config file using `--config` key:
 
 ```bash
-/opt/logbook/bin/logbook --config /etc/logbook/logbook.conf
+/opt/logbook/bin/logbook --config /etc/logbook/logbook.yml
 ```
 
 ## Usage
