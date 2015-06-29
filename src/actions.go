@@ -1,27 +1,25 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
-	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
-// Helpers =====================================================================
-func extractTags(form url.Values) []string {
-	if len(form["tags[]"]) > 0 {
-		return form["tags[]"]
-	} else if len(form["tags"]) > 0 {
-		return strings.Split(form.Get("tags"), ",")
-	}
-
-	return make([]string, 0)
+type ErrorResponse struct {
+	Error string `json:"error"`
 }
 
-// end of Helpers
+func extractTags(tags string) []string {
+	if len(tags) > 0 {
+		return strings.Split(tags, ",")
+	} else {
+		return []string{}
+	}
+}
 
 // Action: Create log ==========================================================
 
@@ -43,23 +41,14 @@ func checkCreateLogParams(msg string, lvl string, tags []string) error {
 	return nil
 }
 
-func createLogHandler(rw http.ResponseWriter, req *http.Request) {
-	var err error
+func createLogHandler(c *gin.Context) {
+	application := c.Param("application")
+	message := c.PostForm("message")
+	levelStr := c.PostForm("level")
+	tags := extractTags(c.PostForm("tags"))
 
-	vars := requestVars(req)
-
-	if err = safeParseForm(req); err != nil {
-		serverError(rw, err, 500)
-		return
-	}
-
-	application := vars["application"]
-	message := req.Form.Get("message")
-	levelStr := req.Form.Get("level")
-	tags := extractTags(req.Form)
-
-	if err = checkCreateLogParams(message, levelStr, tags); err != nil {
-		serverError(rw, err, 422)
+	if err := checkCreateLogParams(message, levelStr, tags); err != nil {
+		c.JSON(422, ErrorResponse{err.Error()})
 		return
 	}
 
@@ -70,18 +59,9 @@ func createLogHandler(rw http.ResponseWriter, req *http.Request) {
 		Tags:    tags,
 	}
 
-	if err = saveLogRecord(application, &logRecord); err != nil {
-		serverError(rw, err, 500)
-		return
-	}
+	panicOnErr(saveLogRecord(application, &logRecord))
 
-	response, err := json.Marshal(logRecord)
-	if err != nil {
-		serverError(rw, err, 500)
-		return
-	}
-
-	serverResponse(rw, response)
+	c.JSON(200, logRecord)
 }
 
 // end of Action: Create log
@@ -114,22 +94,15 @@ func checkGetLogParams(lvl string, tags []string, startTime string, endTime stri
 	return nil
 }
 
-func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
+func getLogsHandler(c *gin.Context) {
 	var err error
 
-	vars := requestVars(req)
-
-	if err = safeParseForm(req); err != nil {
-		serverError(rw, err, 500)
-		return
-	}
-
-	application := vars["application"]
-	levelStr := req.Form.Get("level")
-	startTimeStr := req.Form.Get("start_time")
-	endTimeStr := req.Form.Get("end_time")
-	tags := extractTags(req.Form)
-	pageStr := req.Form.Get("page")
+	application := c.Param("application")
+	levelStr := c.Query("level")
+	startTimeStr := c.Query("start_time")
+	endTimeStr := c.Query("end_time")
+	tags := extractTags(c.Query("tags"))
+	pageStr := c.Query("page")
 
 	if pageStr == "" {
 		pageStr = "1"
@@ -137,7 +110,7 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 
 	err = checkGetLogParams(levelStr, tags, startTimeStr, endTimeStr, pageStr)
 	if err != nil {
-		serverError(rw, err, 422)
+		c.JSON(422, ErrorResponse{err.Error()})
 		return
 	}
 
@@ -146,19 +119,12 @@ func getLogsHandler(rw http.ResponseWriter, req *http.Request) {
 	startTime, _ := parseTime(startTimeStr, false)
 	endTime, _ := parseTime(endTimeStr, true)
 
-	logRecords, err := loadLogRecords(application, level, tags, startTime, endTime, page)
-	if err != nil {
-		serverError(rw, err, 500)
-		return
-	}
+	logRecords, err := loadLogRecords(
+		application, level, tags, startTime, endTime, page,
+	)
+	panicOnErr(err)
 
-	response, err := json.Marshal(&logRecords)
-	if err != nil {
-		serverError(rw, err, 500)
-		return
-	}
-
-	serverResponse(rw, response)
+	c.JSON(200, logRecords)
 }
 
 // end of Action: Get logs

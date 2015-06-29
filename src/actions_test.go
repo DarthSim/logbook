@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	router   *mux.Router
+	router   *gin.Engine
 	response *httptest.ResponseRecorder
 )
 
@@ -50,6 +50,7 @@ var _ = Describe("Actions", func() {
 	var query string
 
 	BeforeEach(func() {
+		gin.SetMode(gin.TestMode)
 		router = setupRouter()
 	})
 
@@ -102,13 +103,6 @@ var _ = Describe("Actions", func() {
 		Context("without tags", func() {
 			BeforeEach(func() {
 				query = "message=Lorem%20ipsum&level=1"
-			})
-			AssertSuccess()
-		})
-
-		Context("with tags as array", func() {
-			BeforeEach(func() {
-				query = "message=Lorem%20ipsum&level=1&tags[]=tag1&tags[]=tag2"
 			})
 			AssertSuccess()
 		})
@@ -212,13 +206,6 @@ var _ = Describe("Actions", func() {
 		Context("without tags", func() {
 			BeforeEach(func() {
 				query = "level=1&start_time=2006-01-02&end_time=2006-01-02&page=1"
-			})
-			AssertSuccess()
-		})
-
-		Context("with tags as array", func() {
-			BeforeEach(func() {
-				query = "level=1&start_time=2006-01-02&end_time=2006-01-02&tags[]=tag1&tags[]=tag2&page=1"
 			})
 			AssertSuccess()
 		})

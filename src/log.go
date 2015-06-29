@@ -4,6 +4,8 @@ import (
 	"io"
 	"log"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -24,6 +26,8 @@ func initLogger() {
 	writer := io.MultiWriter(os.Stdout, logFile)
 
 	logger = log.New(writer, "Logbook: ", log.Ldate|log.Ltime)
+
+	gin.DefaultWriter = writer
 }
 
 func closeLogger() {

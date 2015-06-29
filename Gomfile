@@ -1,4 +1,5 @@
 gom 'github.com/gorilla/mux'
+gom 'github.com/gin-gonic/gin'
 gom 'github.com/boltdb/bolt'
 gom 'code.google.com/p/gcfg'
 gom 'gopkg.in/mgo.v2/bson'

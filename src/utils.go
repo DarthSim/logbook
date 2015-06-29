@@ -76,3 +76,9 @@ func uniqStrings(arr []string) (newArr []string) {
 
 	return
 }
+
+func panicOnErr(err error) {
+	if err != nil {
+		logger.Panic(err)
+	}
+}
