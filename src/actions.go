@@ -21,6 +21,20 @@ func extractTags(tags string) []string {
 	}
 }
 
+func checkCommonParams(lvl string, tags []string) error {
+	if len(lvl) != 1 || lvl < "0" || lvl > "5" {
+		return errors.New("Level should be a number between 0 and 5")
+	}
+
+	for _, tag := range tags {
+		if tag == "" {
+			return errors.New("Tags contain an empty string")
+		}
+	}
+
+	return nil
+}
+
 // Action: Create log ==========================================================
 
 func checkCreateLogParams(msg string, lvl string, tags []string) error {
@@ -28,14 +42,8 @@ func checkCreateLogParams(msg string, lvl string, tags []string) error {
 		return errors.New("Message should be defined")
 	}
 
-	if len(lvl) != 1 || lvl < "1" || lvl > "5" {
-		return errors.New("Level should be a number between 1 and 5")
-	}
-
-	for _, tag := range tags {
-		if tag == "" {
-			return errors.New("Tags contain an empty string")
-		}
+	if err := checkCommonParams(lvl, tags); err != nil {
+		return err
 	}
 
 	return nil
@@ -69,14 +77,8 @@ func createLogHandler(c *gin.Context) {
 // Action: Get logs ============================================================
 
 func checkGetLogParams(lvl string, tags []string, startTime string, endTime string, page string) error {
-	if len(lvl) != 1 || lvl < "1" || lvl > "5" {
-		return errors.New("Level should be a number between 1 and 5")
-	}
-
-	for _, tagName := range tags {
-		if tagName == "" {
-			return errors.New("Tags contain an empty string")
-		}
+	if err := checkCommonParams(lvl, tags); err != nil {
+		return err
 	}
 
 	if !checkTimeFormat(startTime) {

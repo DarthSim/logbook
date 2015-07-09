@@ -128,9 +128,9 @@ var _ = Describe("Actions", func() {
 			AssertUnprocessable()
 		})
 
-		Context("with level < 1", func() {
+		Context("with level < 0", func() {
 			BeforeEach(func() {
-				query = "message=Lorem%20ipsum&level=0&tags=tag1,tag2"
+				query = "message=Lorem%20ipsum&level=-1&tags=tag1,tag2"
 			})
 			AssertUnprocessable()
 		})
@@ -238,9 +238,9 @@ var _ = Describe("Actions", func() {
 			AssertUnprocessable()
 		})
 
-		Context("with level < 1", func() {
+		Context("with level < 0", func() {
 			BeforeEach(func() {
-				query = "level=0tags=tag3,tag4&start_time=2006-01-02&end_time=2006-01-02&page=1"
+				query = "level=-1tags=tag3,tag4&start_time=2006-01-02&end_time=2006-01-02&page=1"
 			})
 			AssertUnprocessable()
 		})
