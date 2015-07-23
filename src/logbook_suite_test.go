@@ -15,14 +15,10 @@ var _ = BeforeSuite(func() {
 
 	config.Database.Path = "test.db"
 
-	config.Log.Path = "test.log"
-
 	config.Auth.User = "test"
 	config.Auth.Password = "test"
 
 	config.Pagination.PerPage = 100
-
-	initLogger()
 
 	initDB()
 })
@@ -30,9 +26,6 @@ var _ = BeforeSuite(func() {
 var _ = AfterSuite(func() {
 	closeDB()
 	os.Remove(absPathToFile(config.Database.Path))
-
-	closeLogger()
-	os.Remove(absPathToFile(config.Log.Path))
 })
 
 var _ = BeforeEach(func() {

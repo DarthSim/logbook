@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -26,7 +27,7 @@ func absPathToFile(path string) string {
 
 func checkErr(err error, msg string) {
 	if err != nil {
-		logger.Fatalf("%s (%v)", msg, err)
+		log.Fatalf("%s (%v)", msg, err)
 	}
 }
 
@@ -79,6 +80,6 @@ func uniqStrings(arr []string) (newArr []string) {
 
 func panicOnErr(err error) {
 	if err != nil {
-		logger.Panic(err)
+		log.Panic(err)
 	}
 }

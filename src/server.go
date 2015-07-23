@@ -1,20 +1,22 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
 func startServer() {
 	bindAddress := config.Server.Address + ":" + config.Server.Port
 
-	logger.Printf("Starting server on %s\n", bindAddress)
+	log.Printf("Starting server on %s\n", bindAddress)
 
 	gin.SetMode(gin.ReleaseMode)
 
 	router := setupRouter()
 
 	if err := router.Run(bindAddress); err != nil {
-		logger.Fatalf("Can't start server: %v", err)
+		log.Fatalf("Can't start server: %v", err)
 	}
 }
 

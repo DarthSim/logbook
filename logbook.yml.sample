@@ -11,8 +11,5 @@ server:
 database:
   path: ../db/logbook.db
 
-log:
-  path: ../log/logbook.log
-
 pagination:
   perPage: 100

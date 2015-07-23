@@ -21,9 +21,6 @@ type Config struct {
 	Database struct {
 		Path string
 	}
-	Log struct {
-		Path string
-	}
 	Pagination struct {
 		PerPage int
 	}
