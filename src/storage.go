@@ -79,6 +79,8 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 }
 
 func loadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords LogRecords, err error) {
+	logRecords = LogRecords{}
+
 	err = db.View(func(tx *bolt.Tx) (err error) {
 		appBucket := tx.Bucket([]byte(application))
 		if appBucket == nil {
@@ -90,7 +92,6 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 		keyStart := recordKey(startTime)
 		keyEnd := recordKey(endTime)
 
-		logRecords = LogRecords{}
 		offset := (page - 1) * config.Pagination.PerPage
 
 		for key, _ := cursor.Seek(keyStart); key != nil && bytes.Compare(key, keyEnd) <= 0; key, _ = cursor.Next() {
