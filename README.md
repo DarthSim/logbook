@@ -48,11 +48,12 @@ To save log message you need to send POST request to `/{application}/put` with t
 * __level__ - level of the log message
 * __message__ - log message
 * __tags (optional)__ - string of tags separated by comma
+* __created_at (optional)__ - datetime when record was created (format: `YYYY-MM-DDThh:mm:ss[.sss][±hh:mm]`). Default: current time.
 
 Example:
 
 ```bash
-curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags=tag1,tag2,tag3" 127.0.0.1:11610/testapp/put
+curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags=tag1,tag2,tag3&created_at=2014-08-29T20:12:07.062+07:00" 127.0.0.1:11610/testapp/put
 ```
 
 ```json
@@ -60,7 +61,7 @@ curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags=tag1,tag2,t
   "message": "Lorem ipsum dolor",
   "level": 3,
   "tags": ["tag1", "tag2", "tag3"],
-  "created_at": "2014-08-29T20:12:07.062186202+07:00"
+  "created_at": "2014-08-29T20:12:07.062+07:00"
 }
 ```
 
@@ -68,8 +69,8 @@ curl --user user:password -d "level=3&message=Lorem ipsum dolor&tags=tag1,tag2,t
 To get log messages you need to send GET request to `/{application}/get` with the following params:
 
 * __level__ - minimum level of log messages
-* __start_time__ - search log messages after the given datetime
-* __end_time__ - search log messages before the given datetime
+* __start_time__ - search log messages after the given datetime (format: `YYYY-MM-DD` or `YYYY-MM-DDThh:mm:ss[.sss][±hh:mm]`)
+* __end_time__ - search log messages before the given datetime (format: `YYYY-MM-DD` or `YYYY-MM-DDThh:mm:ss[.sss][±hh:mm]`)
 * __tags (optional)__ - string of tags separated by comma
 * __page (optional)__ - results page. Logbook returns 100 results per page by default (you can change this number in the config file). Default page number is 1
 

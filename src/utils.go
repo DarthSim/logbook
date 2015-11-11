@@ -7,10 +7,14 @@ import (
 	"time"
 )
 
-const (
-	timeFormat = "2006-01-02 15:04:05"
-	dateFormat = "2006-01-02"
-)
+const dateFormat = "2006-01-02"
+
+var timeFormats = [...]string{
+	"2006-01-02T15:04:05",
+	"2006-01-02T15:04:05-07:00",
+	"2006-01-02T15:04:05.000",
+	"2006-01-02T15:04:05.000-07:00",
+}
 
 func appPath() (path string) {
 	path, _ = filepath.Abs(filepath.Dir(os.Args[0]))
@@ -32,17 +36,38 @@ func checkErr(err error, msg string) {
 }
 
 func checkTimeFormat(timeStr string) bool {
-	_, err := time.Parse(timeFormat, timeStr)
-
-	if err != nil {
-		_, err = time.Parse(dateFormat, timeStr)
+	for _, format := range timeFormats {
+		_, err := time.Parse(format, timeStr)
+		if err == nil {
+			return true
+		}
 	}
 
+	return false
+}
+
+func checkDateTimeFormat(timeStr string) bool {
+	if checkTimeFormat(timeStr) {
+		return true
+	}
+
+	_, err := time.Parse(dateFormat, timeStr)
 	return err == nil
 }
 
-func parseTime(timeStr string, clockToEnd bool) (t time.Time, err error) {
-	t, err = time.ParseInLocation(timeFormat, timeStr, time.Local)
+func parseTime(timeStr string) (t time.Time, err error) {
+	for _, format := range timeFormats {
+		t, err = time.ParseInLocation(format, timeStr, time.Local)
+		if err == nil {
+			return
+		}
+	}
+
+	return
+}
+
+func parseDateTime(timeStr string, clockToEnd bool) (t time.Time, err error) {
+	t, err = parseTime(timeStr)
 
 	if err != nil {
 		t, err = time.ParseInLocation(dateFormat, timeStr, time.Local)

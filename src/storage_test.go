@@ -18,24 +18,26 @@ var _ = Describe("Models", func() {
 		return
 	}
 
+	lastKey := func(bucket *bolt.Bucket) []byte {
+		key, _ := bucket.Cursor().Last()
+		return key
+	}
+
 	Describe("saveLogRecord", func() {
 		var logRecord LogRecord
 
-		JustBeforeEach(func() {
-			var err error
-
+		BeforeEach(func() {
 			logRecord = LogRecord{
-				Message: "Message one",
-				Level:   3,
-				Tags:    []string{"tag1", "tag2"},
+				Message:   "Message one",
+				Level:     3,
+				Tags:      []string{"tag1", "tag2"},
+				CreatedAt: time.Date(2015, 1, 2, 3, 4, 5, 6, time.Local),
 			}
-
-			err = saveLogRecord("apptest", &logRecord)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should set CreatedAt to log record", func() {
-			Expect(logRecord.CreatedAt).NotTo(BeNil())
+		JustBeforeEach(func() {
+			err := saveLogRecord("apptest", &logRecord)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should save log record", func() {
@@ -43,7 +45,7 @@ var _ = Describe("Models", func() {
 				appBucket := tx.Bucket([]byte("apptest"))
 				Expect(appBucket).NotTo(BeNil())
 
-				recordBucket := appBucket.Bucket(recordKey(logRecord.CreatedAt))
+				recordBucket := appBucket.Bucket(lastKey(appBucket))
 				Expect(recordBucket).NotTo(BeNil())
 
 				Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))
@@ -65,9 +67,7 @@ var _ = Describe("Models", func() {
 		})
 
 		Context("when used many times", func() {
-			It("should save log record many times with different CreatedAt", func() {
-				oldCreatedAt := logRecord.CreatedAt
-
+			It("should save log record many times", func() {
 				err := saveLogRecord("apptest", &logRecord)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -75,7 +75,7 @@ var _ = Describe("Models", func() {
 					appBucket := tx.Bucket([]byte("apptest"))
 					Expect(appBucket).NotTo(BeNil())
 
-					recordBucket := appBucket.Bucket(recordKey(logRecord.CreatedAt))
+					recordBucket := appBucket.Bucket(lastKey(appBucket))
 					Expect(recordBucket).NotTo(BeNil())
 
 					Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))
@@ -91,12 +91,19 @@ var _ = Describe("Models", func() {
 					Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
 						Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
 					)
-					Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).NotTo(
-						Equal(oldCreatedAt.Truncate(time.Millisecond)),
-					)
 
 					return nil
 				})
+			})
+		})
+
+		Context("when CreatedAt of log record is zero", func() {
+			BeforeEach(func() {
+				logRecord.CreatedAt = time.Time{}
+			})
+
+			It("should set CreatedAt to log record", func() {
+				Expect(logRecord.CreatedAt).NotTo(BeNil())
 			})
 		})
 	})
@@ -111,6 +118,9 @@ var _ = Describe("Models", func() {
 			Expect(
 				saveLogRecord(application, &logRecord),
 			).To(Succeed())
+
+			time.Sleep(time.Millisecond)
+
 			return
 		}
 

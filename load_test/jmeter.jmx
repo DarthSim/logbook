@@ -67,6 +67,13 @@
                 <stringProp name="Argument.name">tags[]</stringProp>
                 <stringProp name="Argument.desc">false</stringProp>
               </elementProp>
+              <elementProp name="created_at" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">2015-01-01T08:${__Random(10,59)}:10.123</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">created_at</stringProp>
+              </elementProp>
             </collectionProp>
           </elementProp>
           <stringProp name="HTTPSampler.domain">localhost</stringProp>

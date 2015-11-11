@@ -148,6 +148,30 @@ var _ = Describe("Actions", func() {
 			})
 			AssertUnprocessable()
 		})
+
+		Context("with created_at", func() {
+			BeforeEach(func() {
+				query = "message=Lorem%20ipsum&level=1&tags=tag1,tag2&created_at=2015-10-16T08:10:11.123"
+			})
+
+			It("should create log record with provided datetime", func() {
+				parsedRes := LogRecord{}
+				Expect(
+					json.Unmarshal(response.Body.Bytes(), &parsedRes),
+				).To(Succeed())
+
+				Expect(parsedRes.CreatedAt.Truncate(time.Millisecond)).To(
+					Equal(time.Date(2015, 10, 16, 8, 10, 11, 123000000, time.Local)),
+				)
+			})
+		})
+
+		Context("with invalid created_at", func() {
+			BeforeEach(func() {
+				query = "message=Lorem%20ipsum&level=1&tags=tag1,tag2&created_at=2015-10-16T08:10:111"
+			})
+			AssertUnprocessable()
+		})
 	})
 
 	Describe("/:application/get", func() {
@@ -219,14 +243,14 @@ var _ = Describe("Actions", func() {
 
 		Context("with datetime as start_time and end_time", func() {
 			BeforeEach(func() {
-				query = "level=1&tags=tag3,tag4&start_time=2006-01-02%2001:02:03&end_time=2006-01-02%2001:02:03&page=1"
+				query = "level=1&tags=tag3,tag4&start_time=2006-01-02T01:02:03&end_time=2006-01-02T01:02:03&page=1"
 			})
 			AssertSuccess()
 		})
 
 		Context("without page", func() {
 			BeforeEach(func() {
-				query = "level=1&tags=tag3,tag4&start_time=2006-01-02%2001:02:03&end_time=2006-01-02%2001:02:03"
+				query = "level=1&tags=tag3,tag4&start_time=2006-01-02T01:02:03&end_time=2006-01-02T01:02:03"
 			})
 			AssertSuccess()
 		})

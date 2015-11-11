@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"strconv"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -30,8 +31,13 @@ func closeDB() {
 	db.Close()
 }
 
-func recordKey(createdAt time.Time) []byte {
-	return []byte(createdAt.UTC().Format("2006-02-01T15:04:05.000000000"))
+func recordKey(createdAt time.Time, suffix string) []byte {
+	buf := bytes.NewBufferString(
+		createdAt.UTC().Format("2006-02-01T15:04:05.000"),
+	)
+	buf.WriteString("_")
+	buf.WriteString(suffix)
+	return buf.Bytes()
 }
 
 func tagKey(tag string) []byte {
@@ -42,7 +48,9 @@ func tagKey(tag string) []byte {
 
 func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 	err = db.Batch(func(tx *bolt.Tx) (err error) {
-		logRecord.CreatedAt = time.Now()
+		if logRecord.CreatedAt.IsZero() {
+			logRecord.CreatedAt = time.Now()
+		}
 
 		data, err := bson.Marshal(&logRecord)
 		if err != nil {
@@ -54,7 +62,9 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 			return
 		}
 
-		recordBucket, err := appBucket.CreateBucket(recordKey(logRecord.CreatedAt))
+		id, _ := appBucket.NextSequence()
+		key := recordKey(logRecord.CreatedAt, strconv.Itoa(int(id)))
+		recordBucket, err := appBucket.CreateBucket(key)
 		if err != nil {
 			return
 		}
@@ -89,8 +99,8 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 
 		cursor := appBucket.Cursor()
 
-		keyStart := recordKey(startTime)
-		keyEnd := recordKey(endTime)
+		keyStart := recordKey(startTime, "")
+		keyEnd := recordKey(endTime, "_")
 
 		offset := (page - 1) * config.Pagination.PerPage
 
@@ -137,7 +147,7 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 
 			logRecords = append(logRecords, logRecord)
 
-			if len(logRecords) == config.Pagination.PerPage {
+			if len(logRecords) >= config.Pagination.PerPage {
 				break
 			}
 		}

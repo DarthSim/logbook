@@ -37,13 +37,17 @@ func checkCommonParams(lvl string, tags []string) error {
 
 // Action: Create log ==========================================================
 
-func checkCreateLogParams(msg string, lvl string, tags []string) error {
+func checkCreateLogParams(msg string, lvl string, tags []string, createdAt string) error {
 	if msg == "" {
 		return errors.New("Message should be defined")
 	}
 
 	if err := checkCommonParams(lvl, tags); err != nil {
 		return err
+	}
+
+	if len(createdAt) > 0 && !checkTimeFormat(createdAt) {
+		return errors.New("Created at has invalid format")
 	}
 
 	return nil
@@ -54,17 +58,22 @@ func createLogHandler(c *gin.Context) {
 	message := c.PostForm("message")
 	levelStr := c.PostForm("level")
 	tags := extractTags(c.PostForm("tags"))
+	createdAtStr := c.PostForm("created_at")
 
-	if err := checkCreateLogParams(message, levelStr, tags); err != nil {
+	if err := checkCreateLogParams(message, levelStr, tags, createdAtStr); err != nil {
 		c.JSON(422, ErrorResponse{err.Error()})
 		return
 	}
 
-	level, _ := strconv.Atoi(levelStr)
 	logRecord := LogRecord{
 		Message: message,
-		Level:   level,
 		Tags:    tags,
+	}
+
+	logRecord.Level, _ = strconv.Atoi(levelStr)
+
+	if len(createdAtStr) > 0 {
+		logRecord.CreatedAt, _ = parseTime(createdAtStr)
 	}
 
 	panicOnErr(saveLogRecord(application, &logRecord))
@@ -81,12 +90,12 @@ func checkGetLogParams(lvl string, tags []string, startTime string, endTime stri
 		return err
 	}
 
-	if !checkTimeFormat(startTime) {
-		return errors.New("Start time should be YYYY-MM-DD or YYYY-MM-DD hh-mm-ss")
+	if !checkDateTimeFormat(startTime) {
+		return errors.New("Start time has invalid format")
 	}
 
-	if !checkTimeFormat(endTime) {
-		return errors.New("End time should be YYYY-MM-DD or YYYY-MM-DD hh-mm-ss")
+	if !checkDateTimeFormat(endTime) {
+		return errors.New("End time has invalid format")
 	}
 
 	if correct, _ := regexp.MatchString("\\A\\d+\\z", page); !correct {
@@ -118,8 +127,8 @@ func getLogsHandler(c *gin.Context) {
 
 	level, _ := strconv.Atoi(levelStr)
 	page, err := strconv.Atoi(pageStr)
-	startTime, _ := parseTime(startTimeStr, false)
-	endTime, _ := parseTime(endTimeStr, true)
+	startTime, _ := parseDateTime(startTimeStr, false)
+	endTime, _ := parseDateTime(endTimeStr, true)
 
 	logRecords, err := loadLogRecords(
 		application, level, tags, startTime, endTime, page,
