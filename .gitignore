@@ -6,3 +6,4 @@ db/
 load_test/*.pyc
 
 logbook.yml
+*.hprof
