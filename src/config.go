@@ -22,7 +22,7 @@ type Config struct {
 		Path string
 	}
 	Pagination struct {
-		PerPage int
+		PerPage int `yaml:"perPage"`
 	}
 }
 
