@@ -68,8 +68,8 @@
                 <stringProp name="Argument.desc">false</stringProp>
               </elementProp>
               <elementProp name="created_at" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">2015-01-01T08:${__Random(10,59)}:10.123</stringProp>
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">2015-01-01T0${__Random(0,9)}:${__Random(10,59)}:${__Random(10,59)}.123+06:00</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">created_at</stringProp>
