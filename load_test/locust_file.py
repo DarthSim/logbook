@@ -7,6 +7,9 @@ def app_name():
 def tag_name():
   return "tag" + str(random.randint(1,1000))
 
+def created_at():
+  return "2015-01-02T0" + str(random.randint(0,9)) + ":" + str(random.randint(10,59)) + ":" + str(random.randint(10,59)) + ".123+06:00"
+
 class UserBehavior(TaskSet):
   @task(10)
   def put_log(self):
@@ -15,7 +18,8 @@ class UserBehavior(TaskSet):
       {
         "level": 3,
         "message": "Lorem ipsum dolor",
-        "tags": ",".join([tag_name(), tag_name(), tag_name()])
+        "tags": ",".join([tag_name(), tag_name(), tag_name()]),
+        "created_at": created_at()
       },
       name="Put log"
     )
