@@ -160,7 +160,7 @@ var _ = Describe("Actions", func() {
 					json.Unmarshal(response.Body.Bytes(), &parsedRes),
 				).To(Succeed())
 
-				Expect(parsedRes.CreatedAt.Truncate(time.Millisecond)).To(
+				Expect(parsedRes.CreatedAt.Local().Truncate(time.Millisecond)).To(
 					Equal(time.Date(2015, 10, 16, 8, 10, 11, 123000000, time.Local)),
 				)
 			})
