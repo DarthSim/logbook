@@ -7,3 +7,4 @@ before_install:
 script:
   - $HOME/gopath/bin/gom -test install
   - $HOME/gopath/bin/gom test src/*
+sudo: false
