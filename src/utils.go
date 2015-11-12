@@ -59,6 +59,7 @@ func parseTime(timeStr string) (t time.Time, err error) {
 	for _, format := range timeFormats {
 		t, err = time.ParseInLocation(format, timeStr, time.Local)
 		if err == nil {
+			t = t.Local()
 			return
 		}
 	}
