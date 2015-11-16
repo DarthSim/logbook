@@ -27,7 +27,7 @@ class UserBehavior(TaskSet):
   @task(1)
   def get_log(self):
     self.client.get(
-      "/"+app_name()+"/get?level=3&tags="+tag_name()+","+tag_name()+"&start_time=2014-09-01&end_time=2014-09-30",
+      "/"+app_name()+"/get?level=3&tags="+tag_name()+","+tag_name()+"&start_time=2015-01-01&end_time=2015-01-03",
       name="Get logs"
     )
 

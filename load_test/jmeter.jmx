@@ -44,28 +44,12 @@
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">message</stringProp>
               </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
+              <elementProp name="tags" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
+                <stringProp name="Argument.value">tag${__Random(1,10)},tag${__Random(1,10)},tag${__Random(1,10)}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
-              </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
-                <stringProp name="Argument.desc">false</stringProp>
-              </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
-                <stringProp name="Argument.desc">false</stringProp>
+                <stringProp name="Argument.name">tags</stringProp>
               </elementProp>
               <elementProp name="created_at" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">true</boolProp>
@@ -118,28 +102,12 @@
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">end_time</stringProp>
               </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
+              <elementProp name="tags" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
+                <stringProp name="Argument.value">tag${__Random(1,10)},tag${__Random(1,10)}</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
-                <stringProp name="Argument.desc">false</stringProp>
-              </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
-                <stringProp name="Argument.desc">false</stringProp>
-              </elementProp>
-              <elementProp name="tags[]" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">tag${__Random(1,10)}</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">tags[]</stringProp>
+                <stringProp name="Argument.name">tags</stringProp>
                 <stringProp name="Argument.desc">false</stringProp>
               </elementProp>
             </collectionProp>
