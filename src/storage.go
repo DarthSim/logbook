@@ -47,16 +47,16 @@ func tagKey(tag string) []byte {
 }
 
 func saveLogRecord(application string, logRecord *LogRecord) (err error) {
+	if logRecord.CreatedAt.IsZero() {
+		logRecord.CreatedAt = time.Now()
+	}
+
+	data, err := bson.Marshal(&logRecord)
+	if err != nil {
+		return
+	}
+
 	err = db.Batch(func(tx *bolt.Tx) (err error) {
-		if logRecord.CreatedAt.IsZero() {
-			logRecord.CreatedAt = time.Now()
-		}
-
-		data, err := bson.Marshal(&logRecord)
-		if err != nil {
-			return
-		}
-
 		appBucket, err := tx.CreateBucketIfNotExists([]byte(application))
 		if err != nil {
 			return
@@ -64,6 +64,7 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 
 		id, _ := appBucket.NextSequence()
 		key := recordKey(logRecord.CreatedAt, strconv.Itoa(int(id)))
+
 		recordBucket, err := appBucket.CreateBucket(key)
 		if err != nil {
 			return
@@ -85,11 +86,18 @@ func saveLogRecord(application string, logRecord *LogRecord) (err error) {
 
 		return
 	})
+
 	return
 }
 
 func loadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords LogRecords, err error) {
-	logRecords = LogRecords{}
+	keyStart := recordKey(startTime, "")
+	keyEnd := recordKey(endTime, "_")
+
+	offset := (page - 1) * config.Pagination.PerPage
+
+	rawRecords := make([][]byte, config.Pagination.PerPage)
+	fetched := 0
 
 	err = db.View(func(tx *bolt.Tx) (err error) {
 		appBucket := tx.Bucket([]byte(application))
@@ -98,11 +106,6 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 		}
 
 		cursor := appBucket.Cursor()
-
-		keyStart := recordKey(startTime, "")
-		keyEnd := recordKey(endTime, "_")
-
-		offset := (page - 1) * config.Pagination.PerPage
 
 		for key, _ := cursor.Seek(keyStart); key != nil && bytes.Compare(key, keyEnd) <= 0; key, _ = cursor.Next() {
 			recordBucket := appBucket.Bucket(key)
@@ -134,25 +137,29 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 				continue
 			}
 
-			var logRecord LogRecord
-
 			record := recordBucket.Get([]byte("record"))
 			if record == nil {
 				continue
 			}
 
-			if err = bson.Unmarshal(record, &logRecord); err != nil {
-				return
-			}
+			rawRecords[fetched] = make([]byte, len(record))
+			copy(rawRecords[fetched], record)
 
-			logRecords = append(logRecords, logRecord)
-
-			if len(logRecords) >= config.Pagination.PerPage {
+			fetched++
+			if fetched == config.Pagination.PerPage {
 				break
 			}
 		}
 
 		return
 	})
+
+	logRecords = make(LogRecords, fetched)
+	for i := 0; i < fetched; i++ {
+		if err = bson.Unmarshal(rawRecords[i], &logRecords[i]); err != nil {
+			return
+		}
+	}
+
 	return
 }
