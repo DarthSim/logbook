@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"strconv"
 	"time"
 
@@ -161,5 +162,18 @@ func loadLogRecords(application string, lvl int, tags []string, startTime time.T
 		}
 	}
 
+	return
+}
+
+func appStats(application string) (stats bolt.BucketStats, err error) {
+	err = db.View(func(tx *bolt.Tx) (err error) {
+		appBucket := tx.Bucket([]byte(application))
+		if appBucket == nil {
+			err = errors.New("Unknown application")
+		} else {
+			stats = appBucket.Stats()
+		}
+		return
+	})
 	return
 }

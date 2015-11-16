@@ -30,6 +30,7 @@ func setupRouter() (router *gin.Engine) {
 
 	router.POST("/:application/put", createLogHandler)
 	router.GET("/:application/get", getLogsHandler)
+	router.GET("/:application/stats", appStatsHandler)
 
 	return
 }

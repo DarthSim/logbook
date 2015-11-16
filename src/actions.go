@@ -139,3 +139,13 @@ func getLogsHandler(c *gin.Context) {
 }
 
 // end of Action: Get logs
+
+// Action: App stats ===========================================================
+
+func appStatsHandler(c *gin.Context) {
+	stats, err := appStats(c.Param("application"))
+	panicOnErr(err)
+	c.JSON(200, stats)
+}
+
+// end of Action: App stats
