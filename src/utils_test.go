@@ -104,33 +104,16 @@ var _ = Describe("Utils", func() {
 		})
 	})
 
-	Describe("indexOfString", func() {
-		var array []string
-
-		BeforeEach(func() {
-			array = []string{"aaa", "bbb", "ccc"}
-		})
-
-		It("should return index of string in array", func() {
-			Expect(indexOfString(array, "bbb")).To(Equal(1))
-		})
-
-		Context("when array doesn't include string", func() {
-			It("should return -1", func() {
-				Expect(indexOfString(array, "ddd")).To(Equal(-1))
-			})
-		})
-	})
-
 	Describe("uniqStrings", func() {
 		It("should remove dublicated items from array", func() {
 			input := []string{"fff", "fff"}
 			Expect(uniqStrings(input)).To(Equal([]string{"fff"}))
 		})
 
-		It("should return provided unique array as is", func() {
+		It("should return array with all elements from provided one", func() {
 			input := []string{"fff", "fff2"}
-			Expect(uniqStrings(input)).To(Equal(input))
+			Expect(uniqStrings(input)).To(HaveLen(len(input)))
+			Expect(uniqStrings(input)).To(ConsistOf(input))
 		})
 	})
 })

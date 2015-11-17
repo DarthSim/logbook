@@ -57,7 +57,7 @@ func createLogHandler(c *gin.Context) {
 	application := c.Param("application")
 	message := c.PostForm("message")
 	levelStr := c.PostForm("level")
-	tags := extractTags(c.PostForm("tags"))
+	tags := uniqStrings(extractTags(c.PostForm("tags")))
 	createdAtStr := c.PostForm("created_at")
 
 	if err := checkCreateLogParams(message, levelStr, tags, createdAtStr); err != nil {
@@ -112,7 +112,7 @@ func getLogsHandler(c *gin.Context) {
 	levelStr := c.Query("level")
 	startTimeStr := c.Query("start_time")
 	endTimeStr := c.Query("end_time")
-	tags := extractTags(c.Query("tags"))
+	tags := uniqStrings(extractTags(c.Query("tags")))
 	pageStr := c.Query("page")
 
 	if pageStr == "" {

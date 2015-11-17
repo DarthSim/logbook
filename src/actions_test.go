@@ -100,6 +100,22 @@ var _ = Describe("Actions", func() {
 			Expect(parsedRes.Tags).To(Equal([]string{"tag1", "tag2"}))
 		})
 
+		Context("with duplicate tags", func() {
+			BeforeEach(func() {
+				query = "message=Lorem%20ipsum&level=1&tags=tag1,tag2,tag1"
+			})
+
+			AssertSuccess()
+
+			It("should remove duplicate tags", func() {
+				parsedRes := LogRecord{}
+				Expect(
+					json.Unmarshal(response.Body.Bytes(), &parsedRes),
+				).To(Succeed())
+				Expect(parsedRes.Tags).To(Equal([]string{"tag1", "tag2"}))
+			})
+		})
+
 		Context("without tags", func() {
 			BeforeEach(func() {
 				query = "message=Lorem%20ipsum&level=1"

@@ -80,28 +80,24 @@ func parseDateTime(timeStr string, clockToEnd bool) (t time.Time, err error) {
 	return
 }
 
-func indexOfString(arr []string, el string) int {
-	for i, arrEl := range arr {
-		if arrEl == el {
-			return i
-		}
-	}
-
-	return -1
-}
-
-func uniqStrings(arr []string) (newArr []string) {
+func uniqStrings(arr []string) []string {
 	if len(arr) < 2 {
 		return arr
 	}
 
+	m := make(map[string]struct{})
 	for _, el := range arr {
-		if indexOfString(newArr, el) == -1 {
-			newArr = append(newArr, el)
-		}
+		m[el] = struct{}{}
 	}
 
-	return
+	newArr := make([]string, len(m))
+	i := 0
+	for el := range m {
+		newArr[i] = el
+		i++
+	}
+
+	return newArr
 }
 
 func panicOnErr(err error) {
