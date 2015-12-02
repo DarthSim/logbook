@@ -51,4 +51,6 @@ func prepareConfig() {
 		fmt.Printf("Invalid config file format")
 		os.Exit(1)
 	}
+
+	config.Database.Path = absPathToFile(config.Database.Path)
 }

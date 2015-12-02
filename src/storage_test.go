@@ -4,26 +4,31 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/boltdb/bolt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/tecbot/gorocksdb"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Models", func() {
+var _ = Describe("Storage", func() {
 	decodeLogRecord := func(data []byte) (logRecord LogRecord) {
-		err := bson.Unmarshal(data, &logRecord)
+		err := logRecord.Decode(data)
 		Expect(err).NotTo(HaveOccurred())
 		return
 	}
 
-	lastKey := func(bucket *bolt.Bucket) []byte {
-		key, _ := bucket.Cursor().Last()
-		return key
+	lastKey := func(cf *gorocksdb.ColumnFamilyHandle) []byte {
+		it := storage.db.NewIteratorCF(gorocksdb.NewDefaultReadOptions(), cf)
+		it.SeekToLast()
+
+		if string(it.Key().Data()) == "::seq::" {
+			it.Prev()
+		}
+
+		return it.Key().Data()
 	}
 
-	Describe("saveLogRecord", func() {
+	Describe("#SaveLogRecord", func() {
 		var logRecord LogRecord
 
 		BeforeEach(func() {
@@ -36,65 +41,26 @@ var _ = Describe("Models", func() {
 		})
 
 		JustBeforeEach(func() {
-			err := saveLogRecord("apptest", &logRecord)
+			err := storage.SaveLogRecord("apptest", &logRecord)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should save log record", func() {
-			db.View(func(tx *bolt.Tx) (err error) {
-				appBucket := tx.Bucket([]byte("apptest"))
-				Expect(appBucket).NotTo(BeNil())
+			cf := storage.cfmap["apptest"]
+			Expect(cf).NotTo(BeNil())
 
-				recordBucket := appBucket.Bucket(lastKey(appBucket))
-				Expect(recordBucket).NotTo(BeNil())
+			resp, err := storage.db.GetCF(
+				gorocksdb.NewDefaultReadOptions(), cf, lastKey(cf),
+			)
+			Expect(err).To(BeNil())
 
-				Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))
-				Expect(recordBucket.Get([]byte("tag_tag1"))).To(ConsistOf(byte(1)))
-				Expect(recordBucket.Get([]byte("tag_tag2"))).To(ConsistOf(byte(1)))
-
-				parsedRecord := decodeLogRecord(
-					recordBucket.Get([]byte("record")),
-				)
-				Expect(parsedRecord.Message).To(Equal(logRecord.Message))
-				Expect(parsedRecord.Level).To(Equal(logRecord.Level))
-				Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
-				Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
-					Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
-				)
-
-				return nil
-			})
-		})
-
-		Context("when used many times", func() {
-			It("should save log record many times", func() {
-				err := saveLogRecord("apptest", &logRecord)
-				Expect(err).NotTo(HaveOccurred())
-
-				db.View(func(tx *bolt.Tx) (err error) {
-					appBucket := tx.Bucket([]byte("apptest"))
-					Expect(appBucket).NotTo(BeNil())
-
-					recordBucket := appBucket.Bucket(lastKey(appBucket))
-					Expect(recordBucket).NotTo(BeNil())
-
-					Expect(recordBucket.Get([]byte("level"))).To(ConsistOf(byte(3)))
-					Expect(recordBucket.Get([]byte("tag_tag1"))).To(ConsistOf(byte(1)))
-					Expect(recordBucket.Get([]byte("tag_tag2"))).To(ConsistOf(byte(1)))
-
-					parsedRecord := decodeLogRecord(
-						recordBucket.Get([]byte("record")),
-					)
-					Expect(parsedRecord.Message).To(Equal(logRecord.Message))
-					Expect(parsedRecord.Level).To(Equal(logRecord.Level))
-					Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
-					Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
-						Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
-					)
-
-					return nil
-				})
-			})
+			parsedRecord := decodeLogRecord(resp.Data())
+			Expect(parsedRecord.Message).To(Equal(logRecord.Message))
+			Expect(parsedRecord.Level).To(Equal(logRecord.Level))
+			Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
+			Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
+				Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
+			)
 		})
 
 		Context("when CreatedAt of log record is zero", func() {
@@ -116,7 +82,7 @@ var _ = Describe("Models", func() {
 				Tags:    tags,
 			}
 			Expect(
-				saveLogRecord(application, &logRecord),
+				storage.SaveLogRecord(application, &logRecord),
 			).To(Succeed())
 
 			time.Sleep(time.Millisecond)
@@ -134,8 +100,10 @@ var _ = Describe("Models", func() {
 				generateLogRecord("testapp1", "Message 6", 5),
 			}
 
-			loadedLogRecords, err := loadLogRecords("testapp1", 2, []string{},
-				logRecords[1].CreatedAt, logRecords[4].CreatedAt, 1)
+			loadedLogRecords, err := storage.LoadLogRecords(
+				"testapp1", 2, []string{},
+				logRecords[1].CreatedAt, logRecords[4].CreatedAt, 1,
+			)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(loadedLogRecords).To(HaveLen(2))
@@ -145,7 +113,7 @@ var _ = Describe("Models", func() {
 				Equal(logRecords[3].CreatedAt.Truncate(time.Millisecond)),
 			)
 			Expect(loadedLogRecords[0].Message).To(Equal(logRecords[3].Message))
-			Expect(loadedLogRecords[0].Tags).To(Equal(logRecords[3].Tags))
+			Expect(loadedLogRecords[0].Tags).To(ConsistOf(logRecords[3].Tags))
 
 			Expect(loadedLogRecords[1].Level).To(Equal(logRecords[4].Level))
 			Expect(loadedLogRecords[1].CreatedAt.Truncate(time.Millisecond)).To(
@@ -163,8 +131,10 @@ var _ = Describe("Models", func() {
 					generateLogRecord("testapp1", "Message 3", 5, "tag2", "tag3"),
 				}
 
-				loadedLogRecords, err := loadLogRecords("testapp1", 2, []string{"tag1", "tag2"},
-					logRecords[0].CreatedAt, logRecords[2].CreatedAt, 1)
+				loadedLogRecords, err := storage.LoadLogRecords(
+					"testapp1", 2, []string{"tag1", "tag2"},
+					logRecords[0].CreatedAt, logRecords[2].CreatedAt, 1,
+				)
 
 				Expect(err).NotTo(HaveOccurred())
 
@@ -183,8 +153,10 @@ var _ = Describe("Models", func() {
 					)
 				}
 
-				loadedLogRecords, err := loadLogRecords("testapp1", 2, []string{},
-					logRecords[0].CreatedAt, logRecords[109].CreatedAt, 1)
+				loadedLogRecords, err := storage.LoadLogRecords(
+					"testapp1", 2, []string{},
+					logRecords[0].CreatedAt, logRecords[109].CreatedAt, 1,
+				)
 
 				Expect(err).NotTo(HaveOccurred())
 
@@ -192,8 +164,10 @@ var _ = Describe("Models", func() {
 				Expect(loadedLogRecords[0].Message).To(Equal(logRecords[0].Message))
 				Expect(loadedLogRecords[99].Message).To(Equal(logRecords[99].Message))
 
-				loadedLogRecords, err = loadLogRecords("testapp1", 2, []string{},
-					logRecords[0].CreatedAt, logRecords[109].CreatedAt, 2)
+				loadedLogRecords, err = storage.LoadLogRecords(
+					"testapp1", 2, []string{},
+					logRecords[0].CreatedAt, logRecords[109].CreatedAt, 2,
+				)
 
 				Expect(err).NotTo(HaveOccurred())
 

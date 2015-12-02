@@ -97,7 +97,7 @@ var _ = Describe("Actions", func() {
 			Expect(parsedRes.Message).To(Equal("Lorem ipsum"))
 			Expect(parsedRes.Level).To(Equal(1))
 			Expect(parsedRes.CreatedAt).To(BeAssignableToTypeOf(time.Now()))
-			Expect(parsedRes.Tags).To(Equal([]string{"tag1", "tag2"}))
+			Expect(parsedRes.Tags).To(ConsistOf([]string{"tag1", "tag2"}))
 		})
 
 		Context("with duplicate tags", func() {
@@ -112,7 +112,7 @@ var _ = Describe("Actions", func() {
 				Expect(
 					json.Unmarshal(response.Body.Bytes(), &parsedRes),
 				).To(Succeed())
-				Expect(parsedRes.Tags).To(Equal([]string{"tag1", "tag2"}))
+				Expect(parsedRes.Tags).To(ConsistOf([]string{"tag1", "tag2"}))
 			})
 		})
 
@@ -198,7 +198,7 @@ var _ = Describe("Actions", func() {
 				Tags:    tags,
 			}
 			Expect(
-				saveLogRecord(application, &logRecord),
+				storage.SaveLogRecord(application, &logRecord),
 			).To(Succeed())
 		}
 

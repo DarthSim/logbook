@@ -100,6 +100,21 @@ func uniqStrings(arr []string) []string {
 	return newArr
 }
 
+func stringsContain(arr1, arr2 []string) bool {
+	smap := make(map[string]struct{})
+
+	for _, str := range arr1 {
+		smap[str] = struct{}{}
+	}
+	for _, str := range arr2 {
+		if _, ok := smap[str]; !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
 func panicOnErr(err error) {
 	if err != nil {
 		log.Panic(err)

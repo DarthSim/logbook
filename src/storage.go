@@ -2,178 +2,183 @@ package main
 
 import (
 	"bytes"
-	"errors"
+	"encoding/binary"
 	"strconv"
+	"sync"
 	"time"
 
-	"github.com/boltdb/bolt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/tecbot/gorocksdb"
 )
 
-var db *bolt.DB
+const dbTimeFormat = "2006-01-02T15:04:05.000-07:00"
 
-type LogRecord struct {
-	Message   string    `json:"message"`
-	Level     int       `json:"level"`
-	Tags      []string  `json:"tags"`
-	CreatedAt time.Time `json:"created_at"`
+type Storage struct {
+	db       *gorocksdb.DB
+	cfmap    map[string]*gorocksdb.ColumnFamilyHandle
+	seqMutex sync.Mutex
 }
 
-type LogRecords []LogRecord
+var storage Storage
 
-func initDB() {
-	var err error
+func OpenStorage() {
+	dbopts := gorocksdb.NewDefaultOptions()
+	dbopts.SetCreateIfMissing(true)
 
-	db, err = bolt.Open(absPathToFile(config.Database.Path), 0600, nil)
-	checkErr(err, "bolt.Open failed")
+	cfnames, err := gorocksdb.ListColumnFamilies(dbopts, config.Database.Path)
+	if err != nil {
+		cfnames = []string{"default"}
+	}
+
+	cfopts := make([]*gorocksdb.Options, len(cfnames))
+	for i := range cfopts {
+		cfopts[i] = gorocksdb.NewDefaultOptions()
+	}
+
+	var cfhandles []*gorocksdb.ColumnFamilyHandle
+
+	storage.db, cfhandles, err = gorocksdb.OpenDbColumnFamilies(
+		dbopts, config.Database.Path, cfnames, cfopts,
+	)
+	checkErr(err, "can't open RocksDB database")
+
+	storage.cfmap = make(map[string]*gorocksdb.ColumnFamilyHandle)
+	for i, name := range cfnames {
+		storage.cfmap[name] = cfhandles[i]
+	}
 }
 
-func closeDB() {
-	db.Close()
+func (s *Storage) Close() {
+	for _, h := range s.cfmap {
+		h.Destroy()
+	}
+	s.db.Close()
 }
 
 func recordKey(createdAt time.Time, suffix string) []byte {
 	buf := bytes.NewBufferString(
-		createdAt.UTC().Format("2006-02-01T15:04:05.000"),
+		createdAt.UTC().Format(dbTimeFormat),
 	)
 	buf.WriteString("_")
 	buf.WriteString(suffix)
 	return buf.Bytes()
 }
 
-func tagKey(tag string) []byte {
-	buf := bytes.NewBufferString("tag_")
-	buf.WriteString(tag)
-	return buf.Bytes()
-}
+func (s *Storage) nextSeq(cf *gorocksdb.ColumnFamilyHandle) (seq uint64, err error) {
+	s.seqMutex.Lock()
+	defer s.seqMutex.Unlock()
 
-func saveLogRecord(application string, logRecord *LogRecord) (err error) {
-	if logRecord.CreatedAt.IsZero() {
-		logRecord.CreatedAt = time.Now()
-	}
-
-	data, err := bson.Marshal(&logRecord)
+	resp, err := s.db.GetCF(
+		gorocksdb.NewDefaultReadOptions(), cf, []byte("::seq::"),
+	)
 	if err != nil {
 		return
 	}
 
-	err = db.Batch(func(tx *bolt.Tx) (err error) {
-		appBucket, err := tx.CreateBucketIfNotExists([]byte(application))
-		if err != nil {
-			return
-		}
+	if resp.Size() > 0 {
+		seq, _ = binary.Uvarint(resp.Data())
+		seq++
+	}
 
-		id, _ := appBucket.NextSequence()
-		key := recordKey(logRecord.CreatedAt, strconv.Itoa(int(id)))
+	buf := make([]byte, binary.MaxVarintLen64)
+	binary.PutUvarint(buf, seq)
 
-		recordBucket, err := appBucket.CreateBucket(key)
-		if err != nil {
-			return
-		}
-
-		if err = recordBucket.Put([]byte("level"), []byte{byte(logRecord.Level)}); err != nil {
-			return
-		}
-
-		for _, tag := range logRecord.Tags {
-			if err = recordBucket.Put(tagKey(tag), []byte{1}); err != nil {
-				return
-			}
-		}
-
-		if err = recordBucket.Put([]byte("record"), data); err != nil {
-			return
-		}
-
-		return
-	})
+	err = s.db.PutCF(
+		gorocksdb.NewDefaultWriteOptions(), cf, []byte("::seq::"), buf,
+	)
 
 	return
 }
 
-func loadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords LogRecords, err error) {
+func (s *Storage) getOrCreateCF(name string) (cf *gorocksdb.ColumnFamilyHandle, err error) {
+	cf, ok := s.cfmap[name]
+	if !ok {
+		cf, err = s.db.CreateColumnFamily(gorocksdb.NewDefaultOptions(), name)
+		s.cfmap[name] = cf
+	}
+	return
+}
+
+func (s *Storage) SaveLogRecord(application string, logRecord *LogRecord) (err error) {
+	if logRecord.CreatedAt.IsZero() {
+		logRecord.CreatedAt = time.Now()
+	}
+
+	cf, err := s.getOrCreateCF(application)
+	if err != nil {
+		return
+	}
+
+	id, err := s.nextSeq(cf)
+	if err != nil {
+		return
+	}
+
+	return s.db.PutCF(
+		gorocksdb.NewDefaultWriteOptions(),
+		cf,
+		recordKey(logRecord.CreatedAt, strconv.FormatUint(id, 16)),
+		logRecord.Encode(),
+	)
+}
+
+func (s *Storage) LoadLogRecords(application string, lvl int, tags []string, startTime time.Time, endTime time.Time, page int) (logRecords LogRecords, err error) {
 	keyStart := recordKey(startTime, "")
 	keyEnd := recordKey(endTime, "_")
 
 	offset := (page - 1) * config.Pagination.PerPage
 
-	rawRecords := make([][]byte, config.Pagination.PerPage)
+	records := make(LogRecords, config.Pagination.PerPage)
 	fetched := 0
 
-	err = db.View(func(tx *bolt.Tx) (err error) {
-		appBucket := tx.Bucket([]byte(application))
-		if appBucket == nil {
-			return
-		}
-
-		cursor := appBucket.Cursor()
-
-		for key, _ := cursor.Seek(keyStart); key != nil && bytes.Compare(key, keyEnd) <= 0; key, _ = cursor.Next() {
-			recordBucket := appBucket.Bucket(key)
-			if recordBucket == nil {
-				// just for sure
-				continue
-			}
-
-			if lvl > 0 {
-				recordLvl := recordBucket.Get([]byte("level"))
-				if recordLvl == nil || recordLvl[0] < byte(lvl) {
-					continue
-				}
-			}
-
-			tagMissed := false
-			for _, tag := range tags {
-				if recordBucket.Get(tagKey(tag)) == nil {
-					tagMissed = true
-					break
-				}
-			}
-			if tagMissed {
-				continue
-			}
-
-			if offset > 0 {
-				offset--
-				continue
-			}
-
-			record := recordBucket.Get([]byte("record"))
-			if record == nil {
-				continue
-			}
-
-			rawRecords[fetched] = make([]byte, len(record))
-			copy(rawRecords[fetched], record)
-
-			fetched++
-			if fetched == config.Pagination.PerPage {
-				break
-			}
-		}
-
+	cf, err := s.getOrCreateCF(application)
+	if err != nil {
 		return
-	})
+	}
 
-	logRecords = make(LogRecords, fetched)
-	for i := 0; i < fetched; i++ {
-		if err = bson.Unmarshal(rawRecords[i], &logRecords[i]); err != nil {
+	it := s.db.NewIteratorCF(gorocksdb.NewDefaultReadOptions(), cf)
+	defer it.Close()
+
+	var record LogRecord
+
+	for it.Seek(keyStart); it.Valid() && bytes.Compare(it.Key().Data(), keyEnd) <= 0; it.Next() {
+		if it.Value().Size() == 0 {
+			// just for sure
+			continue
+		}
+
+		err = record.Decode(it.Value().Data())
+		if err != nil {
 			return
+		}
+
+		if lvl > record.Level {
+			continue
+		}
+
+		if !stringsContain(record.Tags, tags) {
+			continue
+		}
+
+		if offset > 0 {
+			offset--
+			continue
+		}
+
+		records[fetched] = record
+
+		fetched++
+		if fetched == config.Pagination.PerPage {
+			break
 		}
 	}
 
-	return
+	return records[:fetched], nil
 }
 
-func appStats(application string) (stats bolt.BucketStats, err error) {
-	err = db.View(func(tx *bolt.Tx) (err error) {
-		appBucket := tx.Bucket([]byte(application))
-		if appBucket == nil {
-			err = errors.New("Unknown application")
-		} else {
-			stats = appBucket.Stats()
-		}
-		return
-	})
+func (s *Storage) appStats(application string) (stats string, err error) {
+	cf, err := s.getOrCreateCF(application)
+	if err == nil {
+		stats = s.db.GetPropertyCF("rocksdb.stats", cf)
+	}
 	return
 }

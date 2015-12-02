@@ -5,6 +5,6 @@ go:
 before_install:
   - go get github.com/mattn/gom
 script:
-  - $HOME/gopath/bin/gom -test install
-  - $HOME/gopath/bin/gom test src/*
+  - GOM_INSTALL_FLAGS=-test make prepare
+  - make test
 sudo: false

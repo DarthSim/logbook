@@ -15,9 +15,11 @@ func startServer() {
 
 	router := setupRouter()
 
-	if err := router.Run(bindAddress); err != nil {
-		log.Fatalf("Can't start server: %v", err)
-	}
+	go func(r *gin.Engine) {
+		if err := r.Run(bindAddress); err != nil {
+			log.Fatalf("Can't start server: %v", err)
+		}
+	}(router)
 }
 
 func setupRouter() (router *gin.Engine) {

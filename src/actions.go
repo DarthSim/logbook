@@ -76,7 +76,7 @@ func createLogHandler(c *gin.Context) {
 		logRecord.CreatedAt, _ = parseTime(createdAtStr)
 	}
 
-	panicOnErr(saveLogRecord(application, &logRecord))
+	panicOnErr(storage.SaveLogRecord(application, &logRecord))
 
 	c.JSON(200, logRecord)
 }
@@ -130,7 +130,7 @@ func getLogsHandler(c *gin.Context) {
 	startTime, _ := parseDateTime(startTimeStr, false)
 	endTime, _ := parseDateTime(endTimeStr, true)
 
-	logRecords, err := loadLogRecords(
+	logRecords, err := storage.LoadLogRecords(
 		application, level, tags, startTime, endTime, page,
 	)
 	panicOnErr(err)
@@ -143,9 +143,9 @@ func getLogsHandler(c *gin.Context) {
 // Action: App stats ===========================================================
 
 func appStatsHandler(c *gin.Context) {
-	stats, err := appStats(c.Param("application"))
+	stats, err := storage.appStats(c.Param("application"))
 	panicOnErr(err)
-	c.JSON(200, stats)
+	c.String(200, stats)
 }
 
 // end of Action: App stats

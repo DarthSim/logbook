@@ -104,6 +104,15 @@ var _ = Describe("Utils", func() {
 		})
 	})
 
+	Describe("stringsContain", func() {
+		It("should return true if first array contains all elements from second one", func() {
+			arr := []string{"a", "b", "c"}
+
+			Expect(stringsContain(arr, []string{"a", "b"})).To(BeTrue())
+			Expect(stringsContain(arr, []string{"a", "b", "d"})).To(BeFalse())
+		})
+	})
+
 	Describe("uniqStrings", func() {
 		It("should remove dublicated items from array", func() {
 			input := []string{"fff", "fff"}

@@ -4,6 +4,7 @@ log/
 tmp/
 db/
 load_test/*.pyc
+rocksdb/
 
 logbook.yml
 *.hprof

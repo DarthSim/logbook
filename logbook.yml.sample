@@ -9,7 +9,7 @@ server:
   port: 11610
 
 database:
-  path: ../db/logbook.db
+  path: ../db
 
 pagination:
   perPage: 100
