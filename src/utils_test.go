@@ -60,7 +60,7 @@ var _ = Describe("Utils", func() {
 		It("should parse time", func() {
 			result, err := parseTime("2014-09-08T11:12:13.321")
 			Expect(result).To(
-				Equal(time.Date(2014, 9, 8, 11, 12, 13, 321000000, time.Local)),
+				BeTemporally("==", time.Date(2014, 9, 8, 11, 12, 13, 321000000, time.Local)),
 			)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -76,22 +76,23 @@ var _ = Describe("Utils", func() {
 	Describe("parseDateTime", func() {
 		It("should parse time", func() {
 			result, err := parseDateTime("2014-09-08T11:12:13.321", false)
-			Expect(result).To(
-				Equal(time.Date(2014, 9, 8, 11, 12, 13, 321000000, time.Local)),
-			)
+			expected := time.Date(2014, 9, 8, 11, 12, 13, 321000000, time.Local)
+			Expect(result).To(BeTemporally("==", expected))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should parse date and set time to the beginning of day", func() {
 			result, err := parseDateTime("2014-09-08", false)
-			Expect(result).To(Equal(time.Date(2014, 9, 8, 0, 0, 0, 0, time.Local)))
+			expected := time.Date(2014, 9, 8, 0, 0, 0, 0, time.Local)
+			Expect(result).To(BeTemporally("==", expected))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when clockToEnd is true", func() {
 			It("should parse date and set time to the end of day", func() {
 				result, err := parseDateTime("2014-09-08", true)
-				Expect(result).To(Equal(time.Date(2014, 9, 8, 23, 59, 59, 999999999, time.Local)))
+				expected := time.Date(2014, 9, 8, 23, 59, 59, 999999999, time.Local)
+				Expect(result).To(BeTemporally("==", expected))
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})

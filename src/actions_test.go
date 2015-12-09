@@ -96,7 +96,7 @@ var _ = Describe("Actions", func() {
 
 			Expect(parsedRes.Message).To(Equal("Lorem ipsum"))
 			Expect(parsedRes.Level).To(Equal(1))
-			Expect(parsedRes.CreatedAt).To(BeAssignableToTypeOf(time.Now()))
+			Expect(parsedRes.CreatedAt).To(BeTemporally("~", time.Now(), time.Second))
 			Expect(parsedRes.Tags).To(ConsistOf([]string{"tag1", "tag2"}))
 		})
 

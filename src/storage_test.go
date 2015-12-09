@@ -58,8 +58,8 @@ var _ = Describe("Storage", func() {
 			Expect(parsedRecord.Message).To(Equal(logRecord.Message))
 			Expect(parsedRecord.Level).To(Equal(logRecord.Level))
 			Expect(parsedRecord.Tags).To(Equal(logRecord.Tags))
-			Expect(parsedRecord.CreatedAt.Truncate(time.Millisecond)).To(
-				Equal(logRecord.CreatedAt.Truncate(time.Millisecond)),
+			Expect(parsedRecord.CreatedAt).To(
+				BeTemporally("~", logRecord.CreatedAt, time.Millisecond),
 			)
 		})
 
@@ -69,7 +69,9 @@ var _ = Describe("Storage", func() {
 			})
 
 			It("should set CreatedAt to log record", func() {
-				Expect(logRecord.CreatedAt).NotTo(BeNil())
+				Expect(logRecord.CreatedAt).To(
+					BeTemporally("~", time.Now(), time.Second),
+				)
 			})
 		})
 	})
@@ -109,15 +111,15 @@ var _ = Describe("Storage", func() {
 			Expect(loadedLogRecords).To(HaveLen(2))
 
 			Expect(loadedLogRecords[0].Level).To(Equal(logRecords[3].Level))
-			Expect(loadedLogRecords[0].CreatedAt.Truncate(time.Millisecond)).To(
-				Equal(logRecords[3].CreatedAt.Truncate(time.Millisecond)),
+			Expect(loadedLogRecords[0].CreatedAt).To(
+				BeTemporally("~", logRecords[3].CreatedAt, time.Millisecond),
 			)
 			Expect(loadedLogRecords[0].Message).To(Equal(logRecords[3].Message))
 			Expect(loadedLogRecords[0].Tags).To(ConsistOf(logRecords[3].Tags))
 
 			Expect(loadedLogRecords[1].Level).To(Equal(logRecords[4].Level))
-			Expect(loadedLogRecords[1].CreatedAt.Truncate(time.Millisecond)).To(
-				Equal(logRecords[4].CreatedAt.Truncate(time.Millisecond)),
+			Expect(loadedLogRecords[1].CreatedAt).To(
+				BeTemporally("~", logRecords[4].CreatedAt, time.Millisecond),
 			)
 			Expect(loadedLogRecords[1].Message).To(Equal(logRecords[4].Message))
 			Expect(loadedLogRecords[1].Tags).To(BeEmpty())
