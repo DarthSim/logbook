@@ -18,7 +18,7 @@ before_install:
   - export COMPILER=clang++-3.6
   - export CXX=g++-4.8
   - export CC=gcc-4.8
-  - go get github.com/onsi/ginkgo
+  - go get github.com/onsi/ginkgo/ginkgo
   - go get github.com/onsi/gomega
 
 script:
