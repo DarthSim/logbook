@@ -16,7 +16,7 @@ clean:
 	rm -rf bin/
 
 prepare_rocksdb:
-	if [ "$(ROCKSDB_PATH)" == "$(rocksdb_default_path)" ]; then \
+	if [ "$(ROCKSDB_PATH)" = "$(rocksdb_default_path)" ]; then \
 		if [ ! -d $(ROCKSDB_PATH) ]; then \
 			git clone $(rocksdb_repo) $(ROCKSDB_PATH) --single-branch --branch=v$(rocksdb_ver) --depth=1; \
 		fi; \
