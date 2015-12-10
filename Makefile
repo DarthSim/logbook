@@ -12,6 +12,13 @@ ROCKSDB_LIB_PATH     ?= $(ROCKSDB_PATH)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
+CFLAGS += -I$(abspath $(ROCKSDB_INCLUDE_PATH))
+LDFLAGS += $(abspath $(ROCKSDB_LIB_PATH))/librocksdb.a
+LDFLAGS += -lstdc++ -lm -lz -lbz2 -lsnappy
+
+vendor := $(current_dir)/_vendor
+goenv  := GOPATH="$(vendor):$(GOPATH)" CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)"
+
 ifeq ($(uname_S),Darwin)
 	LDFLAGS += -Wl,-undefined -Wl,dynamic_lookup
 else
@@ -24,7 +31,7 @@ endif
 all: clean build
 
 clean:
-	rm -rf bin/
+	rm -rf $(current_dir)/bin
 
 prepare_rocksdb:
 	if [ "$(ROCKSDB_PATH)" = "$(rocksdb_default_path)" ]; then \
@@ -37,16 +44,9 @@ prepare_rocksdb:
 		fi; \
 	fi
 
-prepare: CFLAGS += -I$(abspath $(ROCKSDB_INCLUDE_PATH))
-prepare: LDFLAGS += $(abspath $(ROCKSDB_LIB_PATH))/librocksdb.a
-prepare: LDFLAGS += -lstdc++ -lm -lz -lbz2 -lsnappy
-prepare: prepare_rocksdb
+build: prepare_rocksdb
 	cd $(current_dir)
-	CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)" gom $(GOM_INSTALL_FLAGS) install
-
-build: prepare
-	cd $(current_dir)
-	gom build -o bin/logbook src/*
+	$(goenv) go build -o bin/logbook
 
 install:
 	cd $(current_dir)
@@ -55,6 +55,12 @@ install:
 	cp -r logbook.yml.sample /opt/logbook
 	cp -r logbook.yml.sample /opt/logbook/logbook.yml
 
-test:
+test: prepare_rocksdb
 	cd $(current_dir)
-	gom exec ginkgo src/
+	$(goenv) ginkgo
+
+vendorize:
+	cd $(current_dir)
+	rm -rf $(vendor)
+	GOPATH=$(vendor) go get -d
+	find $(vendor) -name ".git" -type d | xargs rm -rf

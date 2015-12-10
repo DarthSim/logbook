@@ -1,10 +1,10 @@
-_vendor/
 bin/
 log/
 tmp/
 db/
 load_test/*.pyc
 rocksdb/
+_vendor/pkg
 
 logbook.yml
 *.hprof
