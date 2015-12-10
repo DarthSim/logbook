@@ -1,14 +1,25 @@
 .PHONY: all clean prepare_rocksdb prepare build install test
 .SILENT: prepare_rocksdb
 
-current_dir          = $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-rocksdb_ver          = 4.1
-rocksdb_repo         = https://github.com/facebook/rocksdb
-rocksdb_default_path = $(current_dir)/rocksdb
+current_dir          := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+rocksdb_ver          := 4.1
+rocksdb_repo         := https://github.com/facebook/rocksdb
+rocksdb_default_path := $(current_dir)/rocksdb
 
 ROCKSDB_PATH         ?= $(rocksdb_default_path)
 ROCKSDB_INCLUDE_PATH ?= $(ROCKSDB_PATH)/include
 ROCKSDB_LIB_PATH     ?= $(ROCKSDB_PATH)
+
+uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+
+ifeq ($(uname_S),Darwin)
+	LDFLAGS += -Wl,-undefined -Wl,dynamic_lookup
+else
+	LDFLAGS += -Wl,-unresolved-symbols=ignore-all
+endif
+ifeq ($(uname_S),Linux)
+	LDFLAGS += -lrt
+endif
 
 all: clean build
 
@@ -29,7 +40,6 @@ prepare_rocksdb:
 prepare: CFLAGS += -I$(abspath $(ROCKSDB_INCLUDE_PATH))
 prepare: LDFLAGS += $(abspath $(ROCKSDB_LIB_PATH))/librocksdb.a
 prepare: LDFLAGS += -lstdc++ -lm -lz -lbz2 -lsnappy
-prepare: LDFLAGS += -Wl,-undefined -Wl,dynamic_lookup
 prepare: prepare_rocksdb
 	cd $(current_dir)
 	CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)" gom $(GOM_INSTALL_FLAGS) install
