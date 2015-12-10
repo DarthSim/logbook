@@ -16,9 +16,6 @@ CFLAGS += -I$(abspath $(ROCKSDB_INCLUDE_PATH))
 LDFLAGS += $(abspath $(ROCKSDB_LIB_PATH))/librocksdb.a
 LDFLAGS += -lstdc++ -lm -lz -lbz2 -lsnappy
 
-vendor := $(current_dir)/_vendor
-goenv  := GOPATH="$(vendor):$(GOPATH)" CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)"
-
 ifeq ($(uname_S),Darwin)
 	LDFLAGS += -Wl,-undefined -Wl,dynamic_lookup
 else
@@ -27,6 +24,9 @@ endif
 ifeq ($(uname_S),Linux)
 	LDFLAGS += -lrt
 endif
+
+vendor := $(current_dir)/_vendor
+goenv  := GOPATH="$(vendor):$(GOPATH)" CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)"
 
 all: clean build
 
