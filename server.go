@@ -25,10 +25,13 @@ func startServer() {
 func setupRouter() (router *gin.Engine) {
 	router = gin.New()
 
-	router.Use(
-		gin.Recovery(),
-		gin.BasicAuth(gin.Accounts{config.Auth.Username: config.Auth.Password}),
-	)
+	router.Use(gin.Recovery())
+
+	if config.Auth.Username != "" && config.Auth.Password != "" {
+		router.Use(
+			gin.BasicAuth(gin.Accounts{config.Auth.Username: config.Auth.Password}),
+		)
+	}
 
 	router.POST("/:application/put", createLogHandler)
 	router.GET("/:application/get", getLogsHandler)

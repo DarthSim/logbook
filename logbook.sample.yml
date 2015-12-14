@@ -1,8 +1,11 @@
 # Logbook config
 
 auth:
-  username: user
-  password: password
+  # Basic auth settings. If username or password is blank, auth is disabled.
+  # Default: disabled
+  #
+  # username: user
+  # password: password
 
 server:
   address: 127.0.0.1
