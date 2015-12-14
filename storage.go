@@ -24,7 +24,7 @@ func OpenStorage() {
 	dbopts := gorocksdb.NewDefaultOptions()
 	dbopts.SetCreateIfMissing(true)
 
-	cfnames, err := gorocksdb.ListColumnFamilies(dbopts, config.Database.Path)
+	cfnames, err := gorocksdb.ListColumnFamilies(dbopts, config.DBPath)
 	if err != nil {
 		cfnames = []string{"default"}
 	}
@@ -37,7 +37,7 @@ func OpenStorage() {
 	var cfhandles []*gorocksdb.ColumnFamilyHandle
 
 	storage.db, cfhandles, err = gorocksdb.OpenDbColumnFamilies(
-		dbopts, config.Database.Path, cfnames, cfopts,
+		dbopts, config.DBPath, cfnames, cfopts,
 	)
 	checkErr(err, "can't open RocksDB database")
 
@@ -125,9 +125,9 @@ func (s *Storage) LoadLogRecords(application string, lvl int, tags []string, sta
 	keyStart := recordKey(startTime, "")
 	keyEnd := recordKey(endTime, "_")
 
-	offset := (page - 1) * config.Pagination.PerPage
+	offset := (page - 1) * config.RecordsPerPage
 
-	records := make(LogRecords, config.Pagination.PerPage)
+	records := make(LogRecords, config.RecordsPerPage)
 	fetched := 0
 
 	cf, err := s.getOrCreateCF(application)
@@ -167,7 +167,7 @@ func (s *Storage) LoadLogRecords(application string, lvl int, tags []string, sta
 		records[fetched] = record
 
 		fetched++
-		if fetched == config.Pagination.PerPage {
+		if fetched == config.RecordsPerPage {
 			break
 		}
 	}

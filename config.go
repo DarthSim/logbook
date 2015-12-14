@@ -1,56 +1,86 @@
 package main
 
 import (
+	"bufio"
 	"flag"
-	"fmt"
 	"os"
-
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
+type ConfigMap map[string]string
+
 type Config struct {
-	Auth struct {
-		Username string
-		Password string
-	}
-	Server struct {
-		Address string
-		Port    string
-	}
-	Database struct {
-		Path string
-	}
-	Pagination struct {
-		PerPage int `yaml:"per_page"`
-	}
+	Username string
+	Password string
+
+	Address string
+	Port    int
+
+	DBPath string
+
+	RecordsPerPage int
 }
 
 var config Config
 
-func prepareConfig() {
-	configfile := flag.String(
-		"config",
-		"../logbook.yml",
-		"path to configuration file",
-	)
+func (c ConfigMap) Load(filename string) {
+	file, err := os.Open(absPathToFile(filename))
+	checkErr(err, "Error opening config file")
+	defer file.Close()
 
+	re, _ := regexp.Compile("\\s+")
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		if len(line) == 0 || line[0] == '#' || line[0] == ';' {
+			continue
+		}
+
+		param := re.Split(line, 2)
+
+		if len(param) == 1 {
+			continue
+		}
+
+		c[param[0]] = param[1]
+	}
+}
+
+func (c ConfigMap) GetStr(name, def string) string {
+	if val, ok := c[name]; ok {
+		return val
+	}
+	return def
+}
+
+func (c ConfigMap) GetInt(name string, def int) int {
+	if vals, ok := c[name]; ok {
+		vali, err := strconv.Atoi(vals)
+		checkErr(err, "Error reading config file")
+		return vali
+	}
+	return def
+}
+
+func prepareConfig() {
+	cpath := flag.String(
+		"config", "../logbook.conf", "path to configuration file",
+	)
 	flag.Parse()
 
-	var (
-		confData []byte
-		err      error
-	)
+	cmap := make(ConfigMap)
+	cmap.Load(*cpath)
 
-	if confData, err = ioutil.ReadFile(absPathToFile(*configfile)); err != nil {
-		fmt.Printf("Error opening config file: %v", err)
-		os.Exit(1)
-	}
+	config.Username = cmap["username"]
+	config.Password = cmap["password"]
 
-	if err = yaml.Unmarshal(confData, &config); err != nil {
-		fmt.Printf("Invalid config file format")
-		os.Exit(1)
-	}
+	config.Address = cmap.GetStr("bind", "0.0.0.0")
+	config.Port = cmap.GetInt("port", 11610)
 
-	config.Database.Path = absPathToFile(config.Database.Path)
+	config.DBPath = absPathToFile(cmap.GetStr("db_path", "../db"))
+
+	config.RecordsPerPage = cmap.GetInt("records_per_page", 100)
 }

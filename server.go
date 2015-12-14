@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 )
 
 func startServer() {
-	bindAddress := config.Server.Address + ":" + config.Server.Port
+	bindAddress := fmt.Sprintf("%s:%d", config.Address, config.Port)
 
 	log.Printf("Starting server on %s\n", bindAddress)
 
@@ -27,9 +28,9 @@ func setupRouter() (router *gin.Engine) {
 
 	router.Use(gin.Recovery())
 
-	if config.Auth.Username != "" && config.Auth.Password != "" {
+	if config.Username != "" && config.Password != "" {
 		router.Use(
-			gin.BasicAuth(gin.Accounts{config.Auth.Username: config.Auth.Password}),
+			gin.BasicAuth(gin.Accounts{config.Username: config.Password}),
 		)
 	}
 
