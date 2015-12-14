@@ -27,7 +27,7 @@ func setupRouter() (router *gin.Engine) {
 
 	router.Use(
 		gin.Recovery(),
-		gin.BasicAuth(gin.Accounts{config.Auth.User: config.Auth.Password}),
+		gin.BasicAuth(gin.Accounts{config.Auth.Username: config.Auth.Password}),
 	)
 
 	router.POST("/:application/put", createLogHandler)

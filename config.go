@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Auth struct {
-		User     string
+		Username string
 		Password string
 	}
 	Server struct {
@@ -22,7 +22,7 @@ type Config struct {
 		Path string
 	}
 	Pagination struct {
-		PerPage int `yaml:"perPage"`
+		PerPage int `yaml:"per_page"`
 	}
 }
 

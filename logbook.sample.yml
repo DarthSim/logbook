@@ -1,7 +1,7 @@
 # Logbook config
 
 auth:
-  user: user
+  username: user
   password: password
 
 server:
@@ -12,4 +12,4 @@ database:
   path: ../db
 
 pagination:
-  perPage: 100
+  per_page: 100
