@@ -13,9 +13,9 @@ import (
 const dbTimeFormat = "2006-01-02T15:04:05.000-07:00"
 
 type Storage struct {
-	db       *gorocksdb.DB
-	cfmap    map[string]*gorocksdb.ColumnFamilyHandle
-	seqMutex sync.Mutex
+	db                *gorocksdb.DB
+	cfmap             map[string]*gorocksdb.ColumnFamilyHandle
+	seqMutex, cfMutex sync.Mutex
 }
 
 var storage Storage
@@ -89,13 +89,21 @@ func (s *Storage) nextSeq(cf *gorocksdb.ColumnFamilyHandle) (seq uint64, err err
 	return
 }
 
-func (s *Storage) getOrCreateCF(name string) (cf *gorocksdb.ColumnFamilyHandle, err error) {
-	cf, ok := s.cfmap[name]
-	if !ok {
-		cf, err = s.db.CreateColumnFamily(gorocksdb.NewDefaultOptions(), name)
-		s.cfmap[name] = cf
+func (s *Storage) getOrCreateCF(name string) (*gorocksdb.ColumnFamilyHandle, error) {
+	s.cfMutex.Lock()
+	defer s.cfMutex.Unlock()
+
+	if cf, ok := s.cfmap[name]; ok {
+		return cf, nil
 	}
-	return
+
+	cf, err := s.db.CreateColumnFamily(gorocksdb.NewDefaultOptions(), name)
+	if err != nil {
+		return nil, err
+	}
+
+	s.cfmap[name] = cf
+	return cf, nil
 }
 
 func (s *Storage) SaveLogRecord(application string, logRecord *LogRecord) (err error) {
