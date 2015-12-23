@@ -28,6 +28,8 @@ endif
 vendor := $(current_dir)/_vendor
 goenv  := GOPATH="$(vendor):$(GOPATH)" CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)"
 
+INSTALL_PATH ?= /opt/logbook
+
 all: clean build
 
 clean:
@@ -50,10 +52,9 @@ build: prepare_rocksdb
 
 install:
 	cd $(current_dir)
-	mkdir -p /opt/logbook
-	cp -r bin /opt/logbook
-	cp -r logbook.yml.sample /opt/logbook
-	cp -r logbook.yml.sample /opt/logbook/logbook.yml
+	mkdir -p $(INSTALL_PATH)/bin
+	cp -r bin/logbook $(INSTALL_PATH)/bin
+	cp logbook.sample.conf $(INSTALL_PATH)/logbook.conf
 
 test: prepare_rocksdb
 	cd $(current_dir)
