@@ -35,7 +35,7 @@ func sendRequest(method, path string, body ...string) (err error) {
 		return err
 	}
 
-	req.SetBasicAuth(config.Auth.User, config.Auth.Password)
+	req.SetBasicAuth(config.Username, config.Password)
 
 	if method == "POST" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

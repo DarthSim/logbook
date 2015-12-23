@@ -11,19 +11,19 @@ import (
 var _ = BeforeSuite(func() {
 	config = Config{}
 
-	config.Database.Path = "/tmp/logbook_test_db"
+	config.DBPath = "/tmp/logbook_test_db"
 
-	config.Auth.User = "test"
-	config.Auth.Password = "test"
+	config.Username = "test"
+	config.Password = "test"
 
-	config.Pagination.PerPage = 100
+	config.RecordsPerPage = 100
 
 	OpenStorage()
 })
 
 var _ = AfterSuite(func() {
 	storage.Close()
-	os.RemoveAll(absPathToFile(config.Database.Path))
+	os.RemoveAll(absPathToFile(config.DBPath))
 })
 
 var _ = BeforeEach(func() {
