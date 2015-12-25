@@ -21,20 +21,24 @@ type Config struct {
 
 	DBPath        string
 	DBCompression int
+	DBCacheSize   int
 
 	RecordsPerPage int
 }
 
 var config Config
 
-var compressionTypes map[string]int = map[string]int{
-	"NoCompression": 0,
-	"Snappy":        1,
-	"Zlib":          2,
-	"BZip2":         3,
-	"LZ4":           4,
-	"LZ4HC":         5,
-}
+var (
+	compressionTypes map[string]int = map[string]int{
+		"NoCompression": 0,
+		"Snappy":        1,
+		"Zlib":          2,
+		"BZip2":         3,
+		"LZ4":           4,
+		"LZ4HC":         5,
+	}
+	sizePattern *regexp.Regexp = regexp.MustCompile("\\A(\\d+)([KMG]?)\\z")
+)
 
 func (c ConfigMap) Load(filename string) {
 	file, err := os.Open(absPathToFile(filename))
@@ -76,6 +80,28 @@ func (c ConfigMap) GetInt(name string, def int) int {
 	return def
 }
 
+func (c ConfigMap) GetSize(name string, def string) int {
+	vals := c.GetStr(name, def)
+	parts := sizePattern.FindStringSubmatch(vals)
+
+	if len(parts) == 0 {
+		log.Fatalf("Invalid size: %s", vals)
+	}
+
+	vali, _ := strconv.Atoi(parts[1])
+
+	switch parts[2] {
+	case "K":
+		vali = vali * 1024
+	case "M":
+		vali = vali * 1024 * 1024
+	case "G":
+		vali = vali * 1024 * 1024 * 1024
+	}
+
+	return vali
+}
+
 func prepareConfig() {
 	cpath := flag.String(
 		"config", "../logbook.conf", "path to configuration file",
@@ -98,6 +124,8 @@ func prepareConfig() {
 	} else {
 		log.Fatalln("Invalid db_compression value")
 	}
+
+	config.DBCacheSize = cmap.GetSize("db_cache_size", "16M")
 
 	config.RecordsPerPage = cmap.GetInt("records_per_page", 100)
 }

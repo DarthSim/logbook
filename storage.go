@@ -21,9 +21,13 @@ type Storage struct {
 var storage Storage
 
 func OpenStorage() {
+	tableopts := gorocksdb.NewDefaultBlockBasedTableOptions()
+	tableopts.SetBlockCache(gorocksdb.NewLRUCache(config.DBCacheSize))
+
 	dbopts := gorocksdb.NewDefaultOptions()
 	dbopts.SetCreateIfMissing(true)
 	dbopts.SetCompression(gorocksdb.CompressionType(config.DBCompression))
+	dbopts.SetBlockBasedTableFactory(tableopts)
 
 	cfnames, err := gorocksdb.ListColumnFamilies(dbopts, config.DBPath)
 	if err != nil {
