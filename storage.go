@@ -23,6 +23,7 @@ var storage Storage
 func OpenStorage() {
 	dbopts := gorocksdb.NewDefaultOptions()
 	dbopts.SetCreateIfMissing(true)
+	dbopts.SetCompression(gorocksdb.CompressionType(config.DBCompression))
 
 	cfnames, err := gorocksdb.ListColumnFamilies(dbopts, config.DBPath)
 	if err != nil {

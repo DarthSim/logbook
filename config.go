@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -18,12 +19,22 @@ type Config struct {
 	Address string
 	Port    int
 
-	DBPath string
+	DBPath        string
+	DBCompression int
 
 	RecordsPerPage int
 }
 
 var config Config
+
+var compressionTypes map[string]int = map[string]int{
+	"NoCompression": 0,
+	"Snappy":        1,
+	"Zlib":          2,
+	"BZip2":         3,
+	"LZ4":           4,
+	"LZ4HC":         5,
+}
 
 func (c ConfigMap) Load(filename string) {
 	file, err := os.Open(absPathToFile(filename))
@@ -81,6 +92,12 @@ func prepareConfig() {
 	config.Port = cmap.GetInt("port", 11610)
 
 	config.DBPath = absPathToFile(cmap.GetStr("db_path", "../db"))
+
+	if comp, ok := compressionTypes[cmap.GetStr("db_compression", "Snappy")]; ok {
+		config.DBCompression = comp
+	} else {
+		log.Fatalln("Invalid db_compression value")
+	}
 
 	config.RecordsPerPage = cmap.GetInt("records_per_page", 100)
 }
