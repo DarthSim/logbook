@@ -61,6 +61,10 @@ test: prepare_rocksdb
 
 vendorize:
 	cd $(current_dir)
-	rm -rf $(vendor)
 	GOPATH=$(vendor) go get -d
 	find $(vendor) -name ".git" -type d | xargs rm -rf
+
+clean-vendor:
+	rm -rf $(vendor)
+
+hard-vendorize: clean-vendor vendorize
