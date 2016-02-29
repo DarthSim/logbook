@@ -2,7 +2,7 @@
 .SILENT: prepare_rocksdb
 
 current_dir          := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-rocksdb_ver          := 4.1
+rocksdb_ver          := 4.5
 rocksdb_repo         := https://github.com/facebook/rocksdb
 rocksdb_default_path := $(current_dir)/rocksdb
 
@@ -37,7 +37,7 @@ clean:
 prepare_rocksdb:
 	if [ "$(ROCKSDB_PATH)" = "$(rocksdb_default_path)" ]; then \
 		if [ ! -d $(ROCKSDB_PATH) ]; then \
-			git clone $(rocksdb_repo) $(ROCKSDB_PATH) --single-branch --branch=v$(rocksdb_ver) --depth=1; \
+			git clone $(rocksdb_repo) $(ROCKSDB_PATH) --single-branch --branch=$(rocksdb_ver).fb --depth=1; \
 		fi; \
 		if [ ! -e $(ROCKSDB_PATH)/librocksdb.a ]; then \
 			echo "\nMaking RocksDB...\n"; \
