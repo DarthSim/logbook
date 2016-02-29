@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/gin-gonic/gin/binding/example"
+	"github.com/golang/protobuf/proto"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,6 +40,9 @@ func TestBindingDefault(t *testing.T) {
 
 	assert.Equal(t, Default("POST", MIMEMultipartPOSTForm), Form)
 	assert.Equal(t, Default("PUT", MIMEMultipartPOSTForm), Form)
+
+	assert.Equal(t, Default("POST", MIMEPROTOBUF), ProtoBuf)
+	assert.Equal(t, Default("PUT", MIMEPROTOBUF), ProtoBuf)
 }
 
 func TestBindingJSON(t *testing.T) {
@@ -103,6 +109,18 @@ func TestBindingFormMultipart(t *testing.T) {
 	assert.Equal(t, obj.Bar, "foo")
 }
 
+func TestBindingProtoBuf(t *testing.T) {
+	test := &example.Test{
+		Label: proto.String("yes"),
+	}
+	data, _ := proto.Marshal(test)
+
+	testProtoBodyBinding(t,
+		ProtoBuf, "protobuf",
+		"/", "/",
+		string(data), string(data[1:]))
+}
+
 func TestValidationFails(t *testing.T) {
 	var obj FooStruct
 	req := requestWithBody("POST", "/", `{"bar": "foo"}`)
@@ -119,6 +137,28 @@ func TestValidationDisabled(t *testing.T) {
 	req := requestWithBody("POST", "/", `{"bar": "foo"}`)
 	err := JSON.Bind(req, &obj)
 	assert.NoError(t, err)
+}
+
+func TestExistsSucceeds(t *testing.T) {
+	type HogeStruct struct {
+		Hoge *int `json:"hoge" binding:"exists"`
+	}
+
+	var obj HogeStruct
+	req := requestWithBody("POST", "/", `{"hoge": 0}`)
+	err := JSON.Bind(req, &obj)
+	assert.NoError(t, err)
+}
+
+func TestExistsFails(t *testing.T) {
+	type HogeStruct struct {
+		Hoge *int `json:"foo" binding:"exists"`
+	}
+
+	var obj HogeStruct
+	req := requestWithBody("POST", "/", `{"boen": 0}`)
+	err := JSON.Bind(req, &obj)
+	assert.Error(t, err)
 }
 
 func testFormBinding(t *testing.T, method, path, badPath, body, badBody string) {
@@ -153,6 +193,23 @@ func testBodyBinding(t *testing.T, b Binding, name, path, badPath, body, badBody
 	obj = FooStruct{}
 	req = requestWithBody("POST", badPath, badBody)
 	err = JSON.Bind(req, &obj)
+	assert.Error(t, err)
+}
+
+func testProtoBodyBinding(t *testing.T, b Binding, name, path, badPath, body, badBody string) {
+	assert.Equal(t, b.Name(), name)
+
+	obj := example.Test{}
+	req := requestWithBody("POST", path, body)
+	req.Header.Add("Content-Type", MIMEPROTOBUF)
+	err := b.Bind(req, &obj)
+	assert.NoError(t, err)
+	assert.Equal(t, *obj.Label, "yes")
+
+	obj = example.Test{}
+	req = requestWithBody("POST", badPath, badBody)
+	req.Header.Add("Content-Type", MIMEPROTOBUF)
+	err = ProtoBuf.Bind(req, &obj)
 	assert.Error(t, err)
 }
 
