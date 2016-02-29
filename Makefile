@@ -13,8 +13,7 @@ ROCKSDB_LIB_PATH     ?= $(ROCKSDB_PATH)
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
 CFLAGS += -I$(abspath $(ROCKSDB_INCLUDE_PATH))
-LDFLAGS += $(abspath $(ROCKSDB_LIB_PATH))/librocksdb.a
-LDFLAGS += -lstdc++ -lm -lz -lbz2 -lsnappy
+LDFLAGS += -L$(abspath $(ROCKSDB_LIB_PATH))
 
 ifeq ($(uname_S),Darwin)
 	LDFLAGS += -Wl,-undefined -Wl,dynamic_lookup
