@@ -1,8 +1,0 @@
-gom 'github.com/gin-gonic/gin', :commit => '4cc2de6207f4128624cbdd16be30f64966c67c08'
-gom 'github.com/tecbot/gorocksdb'
-gom 'gopkg.in/yaml.v2'
-
-group :test do
-  gom 'github.com/onsi/ginkgo/ginkgo'
-  gom 'github.com/onsi/gomega'
-end
