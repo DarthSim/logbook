@@ -27,8 +27,6 @@ endif
 vendor := $(current_dir)/_vendor
 goenv  := GOPATH="$(vendor):$(GOPATH)" CGO_CFLAGS="$(CFLAGS)" CGO_LDFLAGS="$(LDFLAGS)"
 
-INSTALL_PATH ?= /opt/logbook
-
 all: clean build
 
 clean:
@@ -48,12 +46,6 @@ prepare_rocksdb:
 build: prepare_rocksdb
 	cd $(current_dir)
 	$(goenv) go build -o bin/logbook
-
-install:
-	cd $(current_dir)
-	mkdir -p $(INSTALL_PATH)/bin
-	cp -r bin/logbook $(INSTALL_PATH)/bin
-	cp logbook.sample.conf $(INSTALL_PATH)/logbook.conf
 
 test: prepare_rocksdb
 	cd $(current_dir)
