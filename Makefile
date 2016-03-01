@@ -1,4 +1,4 @@
-.PHONY: all clean prepare_rocksdb prepare build install test
+.PHONY: all clean prepare_rocksdb prepare build test vendorize clean-vendor hard-vendorize docker-build docker-push
 .SILENT: prepare_rocksdb
 
 current_dir          := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
