@@ -60,3 +60,9 @@ clean-vendor:
 	rm -rf $(vendor)
 
 hard-vendorize: clean-vendor vendorize
+
+docker-build:
+	docker build -t darthsim/logbook:latest $(current_dir)
+
+docker-push:
+	docker push darthsim/logbook:latest
