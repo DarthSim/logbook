@@ -25,5 +25,7 @@ RUN cp logbook.sample.conf /logbook.conf \
   && mkdir /data \
   && ln -s /data /app/db
 
+VOLUME /data
+
 ENTRYPOINT ["/app/bin/logbook"]
 CMD ["--config", "/logbook.conf"]
